@@ -1,0 +1,24 @@
+[project]
+name = "audioguia-cultural-backend"
+version = "0.1.0"
+description = "Backend API for Audioguia Cultural SJC"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+    "pydantic",
+    "sqlalchemy",
+    "asyncpg",
+    "alembic"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+    "httpx"
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

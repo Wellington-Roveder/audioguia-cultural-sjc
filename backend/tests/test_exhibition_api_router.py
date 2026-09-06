@@ -264,3 +264,40 @@ async def test_delete_exhibition_endpoint_returns_404_when_not_found(db_session)
 
     finally:
         app.dependency_overrides.clear()
+
+
+@pytest.mark.asyncio
+async def test_update_exhibition_endpoint_rejects_invalid_partial_date_range(
+    db_session,
+):
+    created_exhibition = await create_exhibition(
+        db_session,
+        ExhibitionCreate(
+            title="Exposição com Datas",
+            description="Exposição para testar atualização parcial de datas.",
+            start_date="2026-10-01",
+            end_date="2026-10-20",
+        ),
+    )
+
+    async def override_get_session():
+        yield db_session
+
+    app.dependency_overrides[get_session] = override_get_session
+
+    try:
+        async with AsyncClient(
+            transport=ASGITransport(app=app),
+            base_url="http://test",
+        ) as client:
+            response = await client.patch(
+                f"/exhibitions/{created_exhibition.id}",
+                json={
+                    "start_date": "2026-10-25",
+                },
+            )
+
+        assert response.status_code == 422
+
+    finally:
+        app.dependency_overrides.clear()

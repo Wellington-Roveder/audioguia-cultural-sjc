@@ -87,13 +87,31 @@ async def update_exhibition_endpoint(
             detail="Exhibition not found",
         )
 
-    updated_exhibition = await update_exhibition(
+    new_start_date = (
+        data.start_date
+        if "start_date" in data.model_fields_set
+        else exhibition.start_date
+    )
+
+    new_end_date = (
+        data.end_date if "end_date" in data.model_fields_set else exhibition.end_date
+    )
+
+    if (
+        new_start_date is not None
+        and new_end_date is not None
+        and new_start_date > new_end_date
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="start_date must be before or equal to end_date",
+        )
+
+    return await update_exhibition(
         session,
         exhibition,
         data,
     )
-
-    return updated_exhibition
 
 
 @router.delete(

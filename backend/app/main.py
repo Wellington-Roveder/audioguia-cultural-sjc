@@ -1,4 +1,5 @@
 from app.api.exhibitions import router as exhibitions_router
+from app.api.works import router as works_router
 from fastapi import FastAPI
 
 app = FastAPI(
@@ -6,6 +7,7 @@ app = FastAPI(
     version="0.1.0",
 )
 app.include_router(exhibitions_router)
+app.include_router(works_router)
 
 
 @app.get("/health")

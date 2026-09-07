@@ -87,7 +87,7 @@ class Work(Base):
         nullable=True,
     )
 
-    public_slug: Mapped[str | None] = mapped_column(
+    public_slug: Mapped[str] = mapped_column(
         String(180),
         nullable=False,
         unique=True,
@@ -112,7 +112,7 @@ class Work(Base):
         onupdate=lambda: datetime.now(timezone.utc),
     )
 
-    exhibition: Mapped[list["Exhibition"]] = relationship(
+    exhibition: Mapped["Exhibition"] = relationship(
         back_populates="works",
     )
 

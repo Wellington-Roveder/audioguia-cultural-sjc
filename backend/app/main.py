@@ -1,4 +1,5 @@
 from app.api.exhibitions import router as exhibitions_router
+from app.api.public_works import router as public_works_router
 from app.api.works import router as works_router
 from fastapi import FastAPI
 
@@ -8,6 +9,7 @@ app = FastAPI(
 )
 app.include_router(exhibitions_router)
 app.include_router(works_router)
+app.include_router(public_works_router)
 
 
 @app.get("/health")

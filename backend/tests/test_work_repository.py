@@ -6,6 +6,7 @@ from app.repositories.work import (
     create_work,
     delete_work,
     get_work_by_id,
+    get_work_by_public_slug,
     list_works_by_exhibition,
     update_work,
 )
@@ -327,3 +328,96 @@ async def test_create_work_generates_unique_public_slugs(db_session):
     assert work_a.public_slug
     assert work_b.public_slug
     assert work_a.public_slug != work_b.public_slug
+
+
+@pytest.mark.asyncio
+async def test_get_work_by_public_slug_returns_active_work(db_session):
+    exhibition = await create_exhibition(
+        db_session,
+        ExhibitionCreate(
+            title="Exposição Teste",
+            description="Descrição.",
+        ),
+    )
+
+    work = await create_work(
+        db_session,
+        WorkCreate(
+            exhibition_id=exhibition.id,
+            title="Obra Pública",
+            description="Descrição pública.",
+        ),
+    )
+
+    found = await get_work_by_public_slug(
+        db_session,
+        work.public_slug,
+    )
+
+    assert found is not None
+    assert found.id == work.id
+    assert found.public_slug == work.public_slug
+
+
+@pytest.mark.asyncio
+async def test_get_work_by_public_slug_does_not_return_inactive_work(
+    db_session,
+):
+    exhibition = await create_exhibition(
+        db_session,
+        ExhibitionCreate(
+            title="Exposição Teste",
+            description="Descrição.",
+        ),
+    )
+
+    work = await create_work(
+        db_session,
+        WorkCreate(
+            exhibition_id=exhibition.id,
+            title="Obra Inativa",
+            description="Descrição.",
+        ),
+    )
+
+    work.is_active = False
+    await db_session.commit()
+
+    found = await get_work_by_public_slug(
+        db_session,
+        work.public_slug,
+    )
+
+    assert found is None
+
+
+@pytest.mark.asyncio
+async def test_get_work_by_public_slug_does_not_return_work_from_inactive_exhibition(
+    db_session,
+):
+    exhibition = await create_exhibition(
+        db_session,
+        ExhibitionCreate(
+            title="Exposição Inativa",
+            description="Descrição.",
+        ),
+    )
+
+    work = await create_work(
+        db_session,
+        WorkCreate(
+            exhibition_id=exhibition.id,
+            title="Obra Ativa",
+            description="Descrição.",
+        ),
+    )
+
+    exhibition.is_active = False
+    await db_session.commit()
+
+    found = await get_work_by_public_slug(
+        db_session,
+        work.public_slug,
+    )
+
+    assert found is None

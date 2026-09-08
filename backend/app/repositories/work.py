@@ -1,6 +1,6 @@
 from uuid import UUID, uuid4
 
-from app.models import Work
+from app.models import Exhibition, Work
 from app.schemas.work import WorkCreate, WorkUpdate
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -76,3 +76,23 @@ async def delete_work(
 ) -> None:
     await session.delete(work)
     await session.commit()
+
+
+async def get_work_by_public_slug(
+    session: AsyncSession,
+    public_slug: str,
+) -> Work | None:
+    result = await session.execute(
+        select(Work)
+        .join(
+            Exhibition,
+            Work.exhibition_id == Exhibition.id,
+        )
+        .where(
+            Work.public_slug == public_slug,
+            Work.is_active.is_(True),
+            Exhibition.is_active.is_(True),
+        )
+    )
+
+    return result.scalar_one_or_none()

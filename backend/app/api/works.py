@@ -1,3 +1,4 @@
+from io import BytesIO
 from uuid import UUID
 
 from app.database.session import get_session
@@ -10,7 +11,9 @@ from app.repositories.work import (
     update_work,
 )
 from app.schemas.work import WorkCreate, WorkRead, WorkUpdate
+from app.services.qr_code import generate_qr_png
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(
@@ -148,4 +151,28 @@ async def delete_work_endpoint(
     await delete_work(
         session,
         work,
+    )
+
+
+@router.get("/{work_id}/qr")
+async def get_work_qr(
+    work_id: UUID,
+    session: AsyncSession = Depends(get_session),
+):
+    work = await get_work_by_id(session, work_id)
+
+    if work is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Work not found",
+        )
+
+    qr_bytes = generate_qr_png(work.public_slug)
+
+    return StreamingResponse(
+        BytesIO(qr_bytes),
+        media_type="image/png",
+        headers={
+            "Content-Disposition": (f'attachment; filename="qr-{work.public_slug}.png"')
+        },
     )

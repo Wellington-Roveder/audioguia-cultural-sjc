@@ -371,3 +371,70 @@ async def test_delete_work_endpoint_returns_404_when_not_found(db_session):
 
     finally:
         app.dependency_overrides.clear()
+
+
+@pytest.mark.asyncio
+async def test_get_work_qr_endpoint_returns_png(db_session):
+    exhibition = await create_exhibition(
+        db_session,
+        ExhibitionCreate(
+            title="Exposição Teste QR",
+            description="Exposição usada para testar QR Code.",
+        ),
+    )
+
+    work = await create_work(
+        db_session,
+        WorkCreate(
+            exhibition_id=exhibition.id,
+            title="Obra com QR",
+            description="Descrição da obra.",
+        ),
+    )
+
+    async def override_get_session():
+        yield db_session
+
+    app.dependency_overrides[get_session] = override_get_session
+
+    try:
+        async with AsyncClient(
+            transport=ASGITransport(app=app),
+            base_url="http://test",
+        ) as client:
+            response = await client.get(f"/works/{work.id}/qr")
+
+        assert response.status_code == 200
+        assert response.headers["content-type"] == "image/png"
+        assert response.content.startswith(b"\x89PNG\r\n\x1a\n")
+
+        content_disposition = response.headers.get("content-disposition")
+
+        assert content_disposition is not None
+        assert f"qr-{work.public_slug}.png" in content_disposition
+
+    finally:
+        app.dependency_overrides.clear()
+
+
+@pytest.mark.asyncio
+async def test_get_work_qr_endpoint_returns_404_when_not_found(
+    db_session,
+):
+    async def override_get_session():
+        yield db_session
+
+    app.dependency_overrides[get_session] = override_get_session
+
+    try:
+        async with AsyncClient(
+            transport=ASGITransport(app=app),
+            base_url="http://test",
+        ) as client:
+            response = await client.get(f"/works/{uuid4()}/qr")
+
+        assert response.status_code == 404
+        assert response.json() == {"detail": "Work not found"}
+
+    finally:
+        app.dependency_overrides.clear()

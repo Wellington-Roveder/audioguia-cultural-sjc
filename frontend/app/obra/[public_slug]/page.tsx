@@ -1,3 +1,5 @@
+import AccessTracker from "./AccessTracker"
+
 type PublicWork = {
   title: string
   artist: string | null
@@ -7,9 +9,17 @@ type PublicWork = {
   libras_video_url: string | null
 }
 
-async function getPublicWork(publicSlug: string): Promise<PublicWork | null> {
+async function getPublicWork(
+  publicSlug: string
+): Promise<PublicWork | null> {
+  const apiUrl = process.env.API_URL
+
+  if (!apiUrl) {
+    throw new Error("API_URL is not configured")
+  }
+
   const response = await fetch(
-    `http://127.0.0.1:8000/public/works/${publicSlug}`,
+    `${apiUrl}/public/works/${publicSlug}`,
     {
       cache: "no-store",
     }
@@ -32,13 +42,16 @@ export default async function PublicWorkPage({
   params: Promise<{ public_slug: string }>
 }) {
   const { public_slug } = await params
+
   const work = await getPublicWork(public_slug)
 
   if (!work) {
     return (
       <main className="work-page">
         <section className="work-card">
-          <p className="work-eyebrow">Audioguia Cultural SJC</p>
+          <p className="work-eyebrow">
+            Audioguia Cultural SJC
+          </p>
 
           <h1>Obra não encontrada</h1>
 
@@ -52,6 +65,8 @@ export default async function PublicWorkPage({
 
   return (
     <main className="work-page">
+      <AccessTracker publicSlug={public_slug} />
+
       <article className="work-card">
         <header className="work-header">
           <p className="work-eyebrow">

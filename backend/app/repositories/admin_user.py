@@ -1,7 +1,8 @@
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
+from uuid import UUID
 
 from app.models import AdminUser
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 async def create_admin_user(
@@ -26,5 +27,14 @@ async def get_admin_user_by_email(
     email: str,
 ) -> AdminUser | None:
     result = await session.execute(select(AdminUser).where(AdminUser.email == email))
+
+    return result.scalar_one_or_none()
+
+
+async def get_admin_user_by_id(
+    session: AsyncSession,
+    admin_id: UUID,
+) -> AdminUser | None:
+    result = await session.execute(select(AdminUser).where(AdminUser.id == admin_id))
 
     return result.scalar_one_or_none()

@@ -1,5 +1,6 @@
 from uuid import UUID
 
+from app.api.dependencies import get_current_admin
 from app.database.session import get_session
 from app.repositories.access_event import (
     count_accesses_by_exhibition,
@@ -17,6 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 router = APIRouter(
     prefix="/metrics",
     tags=["metrics"],
+    dependencies=[Depends(get_current_admin)],
 )
 
 

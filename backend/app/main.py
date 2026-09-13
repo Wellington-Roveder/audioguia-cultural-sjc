@@ -1,3 +1,4 @@
+from app.api.auth import router as auth_router
 from app.api.exhibitions import router as exhibitions_router
 from app.api.metrics import router as metrics_router
 from app.api.public_works import router as public_works_router
@@ -25,6 +26,7 @@ app.include_router(exhibitions_router)
 app.include_router(works_router)
 app.include_router(public_works_router)
 app.include_router(metrics_router)
+app.include_router(auth_router)
 
 
 @app.get("/health")

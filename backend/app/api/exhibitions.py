@@ -1,5 +1,6 @@
 from uuid import UUID
 
+from app.api.dependencies import get_current_admin
 from app.database.session import get_session
 from app.repositories.exhibition import (
     create_exhibition,
@@ -15,6 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 router = APIRouter(
     prefix="/exhibitions",
     tags=["exhibitions"],
+    dependencies=[Depends(get_current_admin)],
 )
 
 

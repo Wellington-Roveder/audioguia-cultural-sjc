@@ -16,6 +16,8 @@ class Settings(BaseSettings):
         extra="ignore",
     )
     public_frontend_url: str
+    algorithm: str
+    access_token_expires_minutes: int = 60
 
 
 settings = Settings()

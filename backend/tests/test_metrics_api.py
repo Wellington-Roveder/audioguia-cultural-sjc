@@ -1,6 +1,8 @@
 from uuid import uuid4
 
 import pytest
+from httpx import ASGITransport, AsyncClient
+
 from app.database.session import get_session
 from app.main import app
 from app.repositories.access_event import create_access_event
@@ -8,11 +10,13 @@ from app.repositories.exhibition import create_exhibition
 from app.repositories.work import create_work
 from app.schemas.exhibition import ExhibitionCreate
 from app.schemas.work import WorkCreate
-from httpx import ASGITransport, AsyncClient
 
 
 @pytest.mark.asyncio
-async def test_get_work_metrics(db_session):
+async def test_get_work_metrics(
+    db_session,
+    auth_headers,
+):
     exhibition = await create_exhibition(
         db_session,
         ExhibitionCreate(
@@ -43,7 +47,10 @@ async def test_get_work_metrics(db_session):
             transport=ASGITransport(app=app),
             base_url="http://test",
         ) as client:
-            response = await client.get(f"/metrics/works/{work.id}")
+            response = await client.get(
+                f"/metrics/works/{work.id}",
+                headers=auth_headers,
+            )
     finally:
         app.dependency_overrides.clear()
 
@@ -55,7 +62,10 @@ async def test_get_work_metrics(db_session):
 
 
 @pytest.mark.asyncio
-async def test_get_work_metrics_with_zero_accesses(db_session):
+async def test_get_work_metrics_with_zero_accesses(
+    db_session,
+    auth_headers,
+):
     exhibition = await create_exhibition(
         db_session,
         ExhibitionCreate(
@@ -83,7 +93,10 @@ async def test_get_work_metrics_with_zero_accesses(db_session):
             transport=ASGITransport(app=app),
             base_url="http://test",
         ) as client:
-            response = await client.get(f"/metrics/works/{work.id}")
+            response = await client.get(
+                f"/metrics/works/{work.id}",
+                headers=auth_headers,
+            )
     finally:
         app.dependency_overrides.clear()
 
@@ -95,7 +108,10 @@ async def test_get_work_metrics_with_zero_accesses(db_session):
 
 
 @pytest.mark.asyncio
-async def test_get_work_metrics_not_found(db_session):
+async def test_get_work_metrics_not_found(
+    db_session,
+    auth_headers,
+):
     async def override_get_session():
         yield db_session
 
@@ -106,7 +122,10 @@ async def test_get_work_metrics_not_found(db_session):
             transport=ASGITransport(app=app),
             base_url="http://test",
         ) as client:
-            response = await client.get(f"/metrics/works/{uuid4()}")
+            response = await client.get(
+                f"/metrics/works/{uuid4()}",
+                headers=auth_headers,
+            )
     finally:
         app.dependency_overrides.clear()
 
@@ -117,7 +136,10 @@ async def test_get_work_metrics_not_found(db_session):
 
 
 @pytest.mark.asyncio
-async def test_get_exhibition_metrics(db_session):
+async def test_get_exhibition_metrics(
+    db_session,
+    auth_headers,
+):
     exhibition = await create_exhibition(
         db_session,
         ExhibitionCreate(
@@ -158,7 +180,10 @@ async def test_get_exhibition_metrics(db_session):
             transport=ASGITransport(app=app),
             base_url="http://test",
         ) as client:
-            response = await client.get(f"/metrics/exhibitions/{exhibition.id}")
+            response = await client.get(
+                f"/metrics/exhibitions/{exhibition.id}",
+                headers=auth_headers,
+            )
     finally:
         app.dependency_overrides.clear()
 
@@ -170,7 +195,10 @@ async def test_get_exhibition_metrics(db_session):
 
 
 @pytest.mark.asyncio
-async def test_get_exhibition_metrics_with_zero_accesses(db_session):
+async def test_get_exhibition_metrics_with_zero_accesses(
+    db_session,
+    auth_headers,
+):
     exhibition = await create_exhibition(
         db_session,
         ExhibitionCreate(
@@ -189,7 +217,10 @@ async def test_get_exhibition_metrics_with_zero_accesses(db_session):
             transport=ASGITransport(app=app),
             base_url="http://test",
         ) as client:
-            response = await client.get(f"/metrics/exhibitions/{exhibition.id}")
+            response = await client.get(
+                f"/metrics/exhibitions/{exhibition.id}",
+                headers=auth_headers,
+            )
     finally:
         app.dependency_overrides.clear()
 
@@ -201,7 +232,10 @@ async def test_get_exhibition_metrics_with_zero_accesses(db_session):
 
 
 @pytest.mark.asyncio
-async def test_get_exhibition_metrics_not_found(db_session):
+async def test_get_exhibition_metrics_not_found(
+    db_session,
+    auth_headers,
+):
     async def override_get_session():
         yield db_session
 
@@ -212,7 +246,10 @@ async def test_get_exhibition_metrics_not_found(db_session):
             transport=ASGITransport(app=app),
             base_url="http://test",
         ) as client:
-            response = await client.get(f"/metrics/exhibitions/{uuid4()}")
+            response = await client.get(
+                f"/metrics/exhibitions/{uuid4()}",
+                headers=auth_headers,
+            )
     finally:
         app.dependency_overrides.clear()
 
@@ -220,3 +257,26 @@ async def test_get_exhibition_metrics_not_found(db_session):
     assert response.json() == {
         "detail": "Exhibition not found",
     }
+
+
+@pytest.mark.asyncio
+async def test_work_metrics_requires_authentication(
+    db_session,
+):
+    async def override_get_session():
+        yield db_session
+
+    app.dependency_overrides[get_session] = override_get_session
+
+    try:
+        async with AsyncClient(
+            transport=ASGITransport(app=app),
+            base_url="http://test",
+        ) as client:
+            response = await client.get(
+                f"/metrics/works/{uuid4()}",
+            )
+    finally:
+        app.dependency_overrides.clear()
+
+    assert response.status_code == 401

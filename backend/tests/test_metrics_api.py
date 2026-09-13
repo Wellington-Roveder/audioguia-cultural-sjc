@@ -1,8 +1,6 @@
 from uuid import uuid4
 
 import pytest
-from httpx import ASGITransport, AsyncClient
-
 from app.database.session import get_session
 from app.main import app
 from app.repositories.access_event import create_access_event
@@ -10,6 +8,7 @@ from app.repositories.exhibition import create_exhibition
 from app.repositories.work import create_work
 from app.schemas.exhibition import ExhibitionCreate
 from app.schemas.work import WorkCreate
+from httpx import ASGITransport, AsyncClient
 
 
 @pytest.mark.asyncio

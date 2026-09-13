@@ -1,6 +1,6 @@
 import pytest_asyncio
 from app.core.config import settings
-from app.models import AccessEvent, Exhibition, Work
+from app.models import AccessEvent, AdminUser, Exhibition, Work
 from sqlalchemy import delete
 from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import (
@@ -41,4 +41,5 @@ async def db_session():
         await session.execute(delete(AccessEvent))
         await session.execute(delete(Work))
         await session.execute(delete(Exhibition))
+        await session.execute(delete(AdminUser))
         await session.commit()

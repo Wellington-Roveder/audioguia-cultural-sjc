@@ -4,6 +4,8 @@ from app.schemas.auth import AdminLogin, TokenResponse
 from app.services.auth import authenticate_admin
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.api.dependencies import get_current_admin
+from app.models import AdminUser
 
 router = APIRouter(
     prefix="/auth",
@@ -37,3 +39,12 @@ async def login(
     return TokenResponse(
         access_token=access_token,
     )
+
+@router.get("/me")
+async def get_me(
+    admin: AdminUser = Depends(get_current_admin),
+):
+    return {
+        "id": str(admin.id),
+        "email": admin.email,
+    }

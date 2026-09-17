@@ -144,3 +144,54 @@ async def test_login_with_inactive_admin(db_session):
     assert response.json() == {
         "detail": "Invalid credentials",
     }
+
+
+@pytest.mark.asyncio
+async def test_get_current_admin_returns_authenticated_admin(
+    db_session,
+    auth_headers,
+):
+    async def override_get_session():
+        yield db_session
+
+    app.dependency_overrides[get_session] = override_get_session
+
+    try:
+        async with AsyncClient(
+            transport=ASGITransport(app=app),
+            base_url="http://test",
+        ) as client:
+            response = await client.get(
+                "/auth/me",
+                headers=auth_headers,
+            )
+    finally:
+        app.dependency_overrides.clear()
+
+    assert response.status_code == 200
+
+    body = response.json()
+
+    assert body["id"] is not None
+    assert body["email"] == "admin@example.com"
+
+
+@pytest.mark.asyncio
+async def test_get_current_admin_requires_authentication(
+    db_session,
+):
+    async def override_get_session():
+        yield db_session
+
+    app.dependency_overrides[get_session] = override_get_session
+
+    try:
+        async with AsyncClient(
+            transport=ASGITransport(app=app),
+            base_url="http://test",
+        ) as client:
+            response = await client.get("/auth/me")
+    finally:
+        app.dependency_overrides.clear()
+
+    assert response.status_code == 401

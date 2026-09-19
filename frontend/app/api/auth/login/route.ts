@@ -20,14 +20,20 @@ export async function POST(request: Request) {
     );
   }
 
-  const nextResponse = NextResponse.json({ authenticated: true });
-
-  nextResponse.cookies.set("admin_session", data.access_token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
+  const nextResponse = NextResponse.json({
+    authenticated: true,
   });
+
+  nextResponse.cookies.set(
+    "admin_session",
+    data.access_token,
+    {
+      httpOnly: true,
+      secure: process.env.COOKIE_SECURE !== "false",
+      sameSite: "lax",
+      path: "/",
+    },
+  );
 
   return nextResponse;
 }

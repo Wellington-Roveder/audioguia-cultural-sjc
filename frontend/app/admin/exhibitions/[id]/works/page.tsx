@@ -110,6 +110,14 @@ export default async function WorksPage({
                 workId={work.id}
                 workTitle={work.title}
                />
+              <p>
+                <Link
+                    href={`/admin/exhibitions/${id}/works/${work.id}/qr`}
+                >
+                    QR Code
+                </Link>
+              </p>
+
             </li>
           ))}
         </ul>

@@ -35,6 +35,7 @@ export default function AdminLoginPage() {
       }
 
       router.push("/admin");
+      router.refresh();
     } catch {
       setError("Não foi possível realizar o login.");
     } finally {
@@ -51,7 +52,9 @@ export default function AdminLoginPage() {
           <label htmlFor="email">E-mail</label>
           <input
             id="email"
+            name="email"
             type="email"
+            autoComplete="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             required
@@ -62,7 +65,9 @@ export default function AdminLoginPage() {
           <label htmlFor="password">Senha</label>
           <input
             id="password"
+            name="password"
             type="password"
+            autoComplete="current-password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             required

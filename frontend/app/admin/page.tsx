@@ -119,6 +119,11 @@ export default async function AdminPage() {
                   exhibitionId={exhibition.id}
                   exhibitionTitle={exhibition.title}
                 />
+                <Link
+                href={`/admin/exhibitions/${exhibition.id}/works`}
+                >
+                  Gerenciar obras
+                </Link>
               </p>
             </li>
           ))}

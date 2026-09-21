@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import DeleteExhibitionButton from "./exhibitions/DeleteExhibitionButton";
+import LogoutButton from "./LogoutButton";
 
 type Admin = {
   id: string;
@@ -88,6 +89,8 @@ export default async function AdminPage() {
       <h1>Painel administrativo</h1>
       <p>Autenticado como {admin.email}</p>
 
+      <LogoutButton />
+
       <h2>Exposições</h2>
       <p>
         <Link href="/admin/exhibitions/new">
@@ -124,7 +127,7 @@ export default async function AdminPage() {
                 >
                   Gerenciar obras
                 </Link>
-                
+
                 <Link href={`/admin/exhibitions/${exhibition.id}/metrics`}>
                     Ver métricas
                 </Link>

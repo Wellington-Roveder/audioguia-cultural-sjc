@@ -124,6 +124,10 @@ export default async function AdminPage() {
                 >
                   Gerenciar obras
                 </Link>
+                
+                <Link href={`/admin/exhibitions/${exhibition.id}/metrics`}>
+                    Ver métricas
+                </Link>
               </p>
             </li>
           ))}

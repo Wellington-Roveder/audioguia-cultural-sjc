@@ -1,13 +1,22 @@
+from uuid import uuid4
+
 import pytest
+from httpx import ASGITransport, AsyncClient
+
 from app.database.session import get_session
 from app.main import app
-from app.repositories.exhibition import create_exhibition, get_exhibition_by_id
+from app.repositories.exhibition import (
+    create_exhibition,
+    get_exhibition_by_id,
+)
 from app.schemas.exhibition import ExhibitionCreate
-from httpx import ASGITransport, AsyncClient
 
 
 @pytest.mark.asyncio
-async def test_create_exhibition_endpoint(db_session):
+async def test_create_exhibition_endpoint(
+    db_session,
+    auth_headers,
+):
     async def override_get_session():
         yield db_session
 
@@ -24,6 +33,7 @@ async def test_create_exhibition_endpoint(db_session):
                     "title": "Exposição Cultural",
                     "description": "Exposição criada pelo teste da API.",
                 },
+                headers=auth_headers,
             )
 
         assert response.status_code == 201
@@ -42,7 +52,10 @@ async def test_create_exhibition_endpoint(db_session):
 
 
 @pytest.mark.asyncio
-async def test_list_exhibitions_endpoint(db_session):
+async def test_list_exhibitions_endpoint(
+    db_session,
+    auth_headers,
+):
     await create_exhibition(
         db_session,
         ExhibitionCreate(
@@ -69,7 +82,10 @@ async def test_list_exhibitions_endpoint(db_session):
             transport=ASGITransport(app=app),
             base_url="http://test",
         ) as client:
-            response = await client.get("/exhibitions")
+            response = await client.get(
+                "/exhibitions",
+                headers=auth_headers,
+            )
 
         assert response.status_code == 200
 
@@ -86,7 +102,10 @@ async def test_list_exhibitions_endpoint(db_session):
 
 
 @pytest.mark.asyncio
-async def test_get_exhibition_endpoint_returns_exhibition(db_session):
+async def test_get_exhibition_endpoint_returns_exhibition(
+    db_session,
+    auth_headers,
+):
     created_exhibition = await create_exhibition(
         db_session,
         ExhibitionCreate(
@@ -105,7 +124,10 @@ async def test_get_exhibition_endpoint_returns_exhibition(db_session):
             transport=ASGITransport(app=app),
             base_url="http://test",
         ) as client:
-            response = await client.get(f"/exhibitions/{created_exhibition.id}")
+            response = await client.get(
+                f"/exhibitions/{created_exhibition.id}",
+                headers=auth_headers,
+            )
 
         assert response.status_code == 200
 
@@ -118,11 +140,11 @@ async def test_get_exhibition_endpoint_returns_exhibition(db_session):
         app.dependency_overrides.clear()
 
 
-from uuid import uuid4
-
-
 @pytest.mark.asyncio
-async def test_get_exhibition_endpoint_returns_404_when_not_found(db_session):
+async def test_get_exhibition_endpoint_returns_404_when_not_found(
+    db_session,
+    auth_headers,
+):
     async def override_get_session():
         yield db_session
 
@@ -133,7 +155,10 @@ async def test_get_exhibition_endpoint_returns_404_when_not_found(db_session):
             transport=ASGITransport(app=app),
             base_url="http://test",
         ) as client:
-            response = await client.get(f"/exhibitions/{uuid4()}")
+            response = await client.get(
+                f"/exhibitions/{uuid4()}",
+                headers=auth_headers,
+            )
 
         assert response.status_code == 404
         assert response.json() == {"detail": "Exhibition not found"}
@@ -143,7 +168,10 @@ async def test_get_exhibition_endpoint_returns_404_when_not_found(db_session):
 
 
 @pytest.mark.asyncio
-async def test_update_exhibition_endpoint_returns_404_when_not_found(db_session):
+async def test_update_exhibition_endpoint_returns_404_when_not_found(
+    db_session,
+    auth_headers,
+):
     async def override_get_session():
         yield db_session
 
@@ -159,6 +187,7 @@ async def test_update_exhibition_endpoint_returns_404_when_not_found(db_session)
                 json={
                     "title": "Título Atualizado",
                 },
+                headers=auth_headers,
             )
 
         assert response.status_code == 404
@@ -169,7 +198,10 @@ async def test_update_exhibition_endpoint_returns_404_when_not_found(db_session)
 
 
 @pytest.mark.asyncio
-async def test_update_exhibition_endpoint_updates_exhibition(db_session):
+async def test_update_exhibition_endpoint_updates_exhibition(
+    db_session,
+    auth_headers,
+):
     created_exhibition = await create_exhibition(
         db_session,
         ExhibitionCreate(
@@ -193,6 +225,7 @@ async def test_update_exhibition_endpoint_updates_exhibition(db_session):
                 json={
                     "title": "Título Atualizado",
                 },
+                headers=auth_headers,
             )
 
         assert response.status_code == 200
@@ -208,7 +241,10 @@ async def test_update_exhibition_endpoint_updates_exhibition(db_session):
 
 
 @pytest.mark.asyncio
-async def test_delete_exhibition_endpoint_removes_exhibition(db_session):
+async def test_delete_exhibition_endpoint_removes_exhibition(
+    db_session,
+    auth_headers,
+):
     created_exhibition = await create_exhibition(
         db_session,
         ExhibitionCreate(
@@ -229,7 +265,10 @@ async def test_delete_exhibition_endpoint_removes_exhibition(db_session):
             transport=ASGITransport(app=app),
             base_url="http://test",
         ) as client:
-            response = await client.delete(f"/exhibitions/{exhibition_id}")
+            response = await client.delete(
+                f"/exhibitions/{exhibition_id}",
+                headers=auth_headers,
+            )
 
         assert response.status_code == 204
         assert response.content == b""
@@ -246,7 +285,10 @@ async def test_delete_exhibition_endpoint_removes_exhibition(db_session):
 
 
 @pytest.mark.asyncio
-async def test_delete_exhibition_endpoint_returns_404_when_not_found(db_session):
+async def test_delete_exhibition_endpoint_returns_404_when_not_found(
+    db_session,
+    auth_headers,
+):
     async def override_get_session():
         yield db_session
 
@@ -257,7 +299,10 @@ async def test_delete_exhibition_endpoint_returns_404_when_not_found(db_session)
             transport=ASGITransport(app=app),
             base_url="http://test",
         ) as client:
-            response = await client.delete(f"/exhibitions/{uuid4()}")
+            response = await client.delete(
+                f"/exhibitions/{uuid4()}",
+                headers=auth_headers,
+            )
 
         assert response.status_code == 404
         assert response.json() == {"detail": "Exhibition not found"}
@@ -269,12 +314,13 @@ async def test_delete_exhibition_endpoint_returns_404_when_not_found(db_session)
 @pytest.mark.asyncio
 async def test_update_exhibition_endpoint_rejects_invalid_partial_date_range(
     db_session,
+    auth_headers,
 ):
     created_exhibition = await create_exhibition(
         db_session,
         ExhibitionCreate(
             title="Exposição com Datas",
-            description="Exposição para testar atualização parcial de datas.",
+            description=("Exposição para testar atualização parcial de datas."),
             start_date="2026-10-01",
             end_date="2026-10-20",
         ),
@@ -295,9 +341,34 @@ async def test_update_exhibition_endpoint_rejects_invalid_partial_date_range(
                 json={
                     "start_date": "2026-10-25",
                 },
+                headers=auth_headers,
             )
 
         assert response.status_code == 422
 
     finally:
         app.dependency_overrides.clear()
+
+
+@pytest.mark.asyncio
+async def test_exhibitions_requires_authentication(
+    db_session,
+):
+    async def override_get_session():
+        yield db_session
+
+    app.dependency_overrides[get_session] = override_get_session
+
+    try:
+        async with AsyncClient(
+            transport=ASGITransport(app=app),
+            base_url="http://test",
+        ) as client:
+            response = await client.get(
+                "/exhibitions",
+            )
+
+    finally:
+        app.dependency_overrides.clear()
+
+    assert response.status_code == 401

@@ -1,6 +1,7 @@
 from io import BytesIO
 from uuid import UUID
 
+from app.api.dependencies import get_current_admin
 from app.database.session import get_session
 from app.repositories.exhibition import get_exhibition_by_id
 from app.repositories.work import (
@@ -19,6 +20,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 router = APIRouter(
     prefix="/works",
     tags=["works"],
+    dependencies=[Depends(get_current_admin)],
 )
 
 

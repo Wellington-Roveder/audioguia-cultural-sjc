@@ -1,6 +1,8 @@
 import pytest_asyncio
 from app.core.config import settings
-from app.models import AccessEvent, Exhibition, Work
+from app.core.security import create_access_token, hash_password
+from app.models import AccessEvent, AdminUser, Exhibition, Work
+from app.repositories.admin_user import create_admin_user
 from sqlalchemy import delete
 from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import (
@@ -41,4 +43,20 @@ async def db_session():
         await session.execute(delete(AccessEvent))
         await session.execute(delete(Work))
         await session.execute(delete(Exhibition))
+        await session.execute(delete(AdminUser))
         await session.commit()
+
+
+@pytest_asyncio.fixture
+async def auth_headers(db_session):
+    admin = await create_admin_user(
+        db_session,
+        email="admin@example.com",
+        password_hash=hash_password("senha-segura"),
+    )
+
+    token = create_access_token(str(admin.id))
+
+    return {
+        "Authorization": f"Bearer {token}",
+    }

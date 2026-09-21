@@ -11,7 +11,7 @@ from httpx import ASGITransport, AsyncClient
 
 
 @pytest.mark.asyncio
-async def test_create_work_endpoint_creates_work(db_session):
+async def test_create_work_endpoint_creates_work(db_session, auth_headers):
     exhibition = await create_exhibition(
         db_session,
         ExhibitionCreate(
@@ -38,6 +38,7 @@ async def test_create_work_endpoint_creates_work(db_session):
                     "artist": "Artista Teste",
                     "description": "Descrição da obra.",
                 },
+                headers=auth_headers,
             )
 
         assert response.status_code == 201
@@ -58,7 +59,7 @@ async def test_create_work_endpoint_creates_work(db_session):
 
 @pytest.mark.asyncio
 async def test_create_work_endpoint_returns_404_when_exhibition_not_found(
-    db_session,
+    db_session, auth_headers
 ):
     async def override_get_session():
         yield db_session
@@ -77,6 +78,7 @@ async def test_create_work_endpoint_returns_404_when_exhibition_not_found(
                     "title": "Obra Teste",
                     "description": "Descrição.",
                 },
+                headers=auth_headers,
             )
 
         assert response.status_code == 404
@@ -87,7 +89,7 @@ async def test_create_work_endpoint_returns_404_when_exhibition_not_found(
 
 
 @pytest.mark.asyncio
-async def test_get_work_endpoint_returns_work(db_session):
+async def test_get_work_endpoint_returns_work(db_session, auth_headers):
     exhibition = await create_exhibition(
         db_session,
         ExhibitionCreate(
@@ -115,7 +117,10 @@ async def test_get_work_endpoint_returns_work(db_session):
             transport=ASGITransport(app=app),
             base_url="http://test",
         ) as client:
-            response = await client.get(f"/works/{work.id}")
+            response = await client.get(
+                f"/works/{work.id}",
+                headers=auth_headers,
+            )
 
         assert response.status_code == 200
 
@@ -130,7 +135,7 @@ async def test_get_work_endpoint_returns_work(db_session):
 
 
 @pytest.mark.asyncio
-async def test_get_work_endpoint_returns_404_when_not_found(db_session):
+async def test_get_work_endpoint_returns_404_when_not_found(db_session, auth_headers):
     async def override_get_session():
         yield db_session
 
@@ -141,7 +146,10 @@ async def test_get_work_endpoint_returns_404_when_not_found(db_session):
             transport=ASGITransport(app=app),
             base_url="http://test",
         ) as client:
-            response = await client.get(f"/works/{uuid4()}")
+            response = await client.get(
+                f"/works/{uuid4()}",
+                headers=auth_headers,
+            )
 
         assert response.status_code == 404
         assert response.json() == {"detail": "Work not found"}
@@ -152,7 +160,7 @@ async def test_get_work_endpoint_returns_404_when_not_found(db_session):
 
 @pytest.mark.asyncio
 async def test_list_works_by_exhibition_endpoint_returns_related_works(
-    db_session,
+    db_session, auth_headers
 ):
     exhibition = await create_exhibition(
         db_session,
@@ -190,7 +198,10 @@ async def test_list_works_by_exhibition_endpoint_returns_related_works(
             transport=ASGITransport(app=app),
             base_url="http://test",
         ) as client:
-            response = await client.get(f"/works/by-exhibition/{exhibition.id}")
+            response = await client.get(
+                f"/works/by-exhibition/{exhibition.id}",
+                headers=auth_headers,
+            )
 
         assert response.status_code == 200
 
@@ -208,7 +219,7 @@ async def test_list_works_by_exhibition_endpoint_returns_related_works(
 
 @pytest.mark.asyncio
 async def test_list_works_by_exhibition_endpoint_returns_404_when_exhibition_not_found(
-    db_session,
+    db_session, auth_headers
 ):
     async def override_get_session():
         yield db_session
@@ -220,7 +231,10 @@ async def test_list_works_by_exhibition_endpoint_returns_404_when_exhibition_not
             transport=ASGITransport(app=app),
             base_url="http://test",
         ) as client:
-            response = await client.get(f"/works/by-exhibition/{uuid4()}")
+            response = await client.get(
+                f"/works/by-exhibition/{uuid4()}",
+                headers=auth_headers,
+            )
 
         assert response.status_code == 404
         assert response.json() == {"detail": "Exhibition not found"}
@@ -230,7 +244,7 @@ async def test_list_works_by_exhibition_endpoint_returns_404_when_exhibition_not
 
 
 @pytest.mark.asyncio
-async def test_update_work_endpoint_updates_work(db_session):
+async def test_update_work_endpoint_updates_work(db_session, auth_headers):
     exhibition = await create_exhibition(
         db_session,
         ExhibitionCreate(
@@ -264,6 +278,7 @@ async def test_update_work_endpoint_updates_work(db_session):
                 json={
                     "title": "Título Atualizado",
                 },
+                headers=auth_headers,
             )
 
         assert response.status_code == 200
@@ -280,7 +295,9 @@ async def test_update_work_endpoint_updates_work(db_session):
 
 
 @pytest.mark.asyncio
-async def test_update_work_endpoint_returns_404_when_not_found(db_session):
+async def test_update_work_endpoint_returns_404_when_not_found(
+    db_session, auth_headers
+):
     async def override_get_session():
         yield db_session
 
@@ -296,6 +313,7 @@ async def test_update_work_endpoint_returns_404_when_not_found(db_session):
                 json={
                     "title": "Título Atualizado",
                 },
+                headers=auth_headers,
             )
 
         assert response.status_code == 404
@@ -306,7 +324,7 @@ async def test_update_work_endpoint_returns_404_when_not_found(db_session):
 
 
 @pytest.mark.asyncio
-async def test_delete_work_endpoint_removes_work(db_session):
+async def test_delete_work_endpoint_removes_work(db_session, auth_headers):
     exhibition = await create_exhibition(
         db_session,
         ExhibitionCreate(
@@ -336,7 +354,10 @@ async def test_delete_work_endpoint_removes_work(db_session):
             transport=ASGITransport(app=app),
             base_url="http://test",
         ) as client:
-            response = await client.delete(f"/works/{work_id}")
+            response = await client.delete(
+                f"/works/{work_id}",
+                headers=auth_headers,
+            )
 
         assert response.status_code == 204
         assert response.content == b""
@@ -353,7 +374,9 @@ async def test_delete_work_endpoint_removes_work(db_session):
 
 
 @pytest.mark.asyncio
-async def test_delete_work_endpoint_returns_404_when_not_found(db_session):
+async def test_delete_work_endpoint_returns_404_when_not_found(
+    db_session, auth_headers
+):
     async def override_get_session():
         yield db_session
 
@@ -364,7 +387,10 @@ async def test_delete_work_endpoint_returns_404_when_not_found(db_session):
             transport=ASGITransport(app=app),
             base_url="http://test",
         ) as client:
-            response = await client.delete(f"/works/{uuid4()}")
+            response = await client.delete(
+                f"/works/{uuid4()}",
+                headers=auth_headers,
+            )
 
         assert response.status_code == 404
         assert response.json() == {"detail": "Work not found"}
@@ -374,7 +400,7 @@ async def test_delete_work_endpoint_returns_404_when_not_found(db_session):
 
 
 @pytest.mark.asyncio
-async def test_get_work_qr_endpoint_returns_png(db_session):
+async def test_get_work_qr_endpoint_returns_png(db_session, auth_headers):
     exhibition = await create_exhibition(
         db_session,
         ExhibitionCreate(
@@ -402,7 +428,10 @@ async def test_get_work_qr_endpoint_returns_png(db_session):
             transport=ASGITransport(app=app),
             base_url="http://test",
         ) as client:
-            response = await client.get(f"/works/{work.id}/qr")
+            response = await client.get(
+                f"/works/{work.id}/qr",
+                headers=auth_headers,
+            )
 
         assert response.status_code == 200
         assert response.headers["content-type"] == "image/png"
@@ -419,6 +448,32 @@ async def test_get_work_qr_endpoint_returns_png(db_session):
 
 @pytest.mark.asyncio
 async def test_get_work_qr_endpoint_returns_404_when_not_found(
+    db_session, auth_headers
+):
+    async def override_get_session():
+        yield db_session
+
+    app.dependency_overrides[get_session] = override_get_session
+
+    try:
+        async with AsyncClient(
+            transport=ASGITransport(app=app),
+            base_url="http://test",
+        ) as client:
+            response = await client.get(
+                f"/works/{uuid4()}/qr",
+                headers=auth_headers,
+            )
+
+        assert response.status_code == 404
+        assert response.json() == {"detail": "Work not found"}
+
+    finally:
+        app.dependency_overrides.clear()
+
+
+@pytest.mark.asyncio
+async def test_works_requires_authentication(
     db_session,
 ):
     async def override_get_session():
@@ -431,10 +486,10 @@ async def test_get_work_qr_endpoint_returns_404_when_not_found(
             transport=ASGITransport(app=app),
             base_url="http://test",
         ) as client:
-            response = await client.get(f"/works/{uuid4()}/qr")
-
-        assert response.status_code == 404
-        assert response.json() == {"detail": "Work not found"}
-
+            response = await client.get(
+                f"/works/{uuid4()}",
+            )
     finally:
         app.dependency_overrides.clear()
+
+    assert response.status_code == 401

@@ -12,6 +12,9 @@ dependencies = [
     "alembic",
     "pydantic-settings",
     "qrcode[pil]",
+    "pwdlib[argon2]",
+    "email-validator",
+    "PyJWT",
 ]
 
 [project.optional-dependencies]

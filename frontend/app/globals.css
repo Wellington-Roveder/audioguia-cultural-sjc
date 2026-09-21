@@ -12,18 +12,27 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
 }
 
 body {
+  margin: 0;
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
+
+button,
+a,
+audio {
+  font: inherit;
+}
+
+/* ─────────────────────────────────────────────
+   Página pública da obra
+   ───────────────────────────────────────────── */
+
 .work-page {
   min-height: 100vh;
   padding: 24px 16px;
@@ -101,18 +110,18 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-
-  min-height: 48px;
   width: 100%;
-
+  min-height: 48px;
   padding: 12px 18px;
-
   border: 2px solid currentColor;
   border-radius: 10px;
-
+  color: inherit;
   font-weight: 700;
   text-decoration: none;
-  color: inherit;
+}
+
+.work-link:hover {
+  background: #f5f3ee;
 }
 
 .work-link:focus-visible {
@@ -124,10 +133,13 @@ body {
   margin-top: 36px;
   padding-top: 20px;
   border-top: 1px solid #dddddd;
-
-  font-size: 0.85rem;
   color: #666666;
+  font-size: 0.85rem;
 }
+
+/* ─────────────────────────────────────────────
+   Tablet / desktop
+   ───────────────────────────────────────────── */
 
 @media (min-width: 768px) {
   .work-page {
@@ -138,6 +150,10 @@ body {
     padding: 48px;
   }
 }
+
+/* ─────────────────────────────────────────────
+   Celulares menores
+   ───────────────────────────────────────────── */
 
 @media (max-width: 480px) {
   .work-page {
@@ -165,5 +181,19 @@ body {
 
   .work-footer {
     margin-top: 28px;
+  }
+}
+
+/* ─────────────────────────────────────────────
+   Preferência por movimento reduzido
+   ───────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition: none !important;
+    animation: none !important;
   }
 }

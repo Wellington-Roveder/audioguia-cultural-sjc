@@ -493,3 +493,389 @@ async def test_works_requires_authentication(
         app.dependency_overrides.clear()
 
     assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_upload_work_audio_stores_file_and_updates_work(
+    db_session,
+    auth_headers,
+):
+    from unittest.mock import MagicMock
+
+    from app.core.storage import get_storage_service
+
+    exhibition = await create_exhibition(
+        db_session,
+        ExhibitionCreate(
+            title="Exposição com Áudio",
+            description="Exposição usada para testar upload.",
+        ),
+    )
+
+    work = await create_work(
+        db_session,
+        WorkCreate(
+            exhibition_id=exhibition.id,
+            title="Obra com Áudio",
+            description="Descrição da obra.",
+        ),
+    )
+
+    storage = MagicMock()
+
+    async def override_get_session():
+        yield db_session
+
+    def override_get_storage_service():
+        return storage
+
+    app.dependency_overrides[get_session] = override_get_session
+    app.dependency_overrides[get_storage_service] = override_get_storage_service
+
+    try:
+        async with AsyncClient(
+            transport=ASGITransport(app=app),
+            base_url="http://test",
+        ) as client:
+            response = await client.post(
+                f"/works/{work.id}/media/audio",
+                files={
+                    "file": (
+                        "audio.mp3",
+                        b"ID3\x04\x00\x00\x00\x00\x00\x00fake audio data",
+                        "audio/mpeg",
+                    )
+                },
+                headers=auth_headers,
+            )
+
+        assert response.status_code == 201
+
+        storage.upload.assert_called_once()
+
+        upload_call = storage.upload.call_args.kwargs
+
+        assert upload_call["content_type"] == "audio/mpeg"
+        assert str(work.id) in upload_call["object_key"]
+        assert upload_call["object_key"].endswith(".mp3")
+
+        await db_session.refresh(work)
+
+        assert work.audio_url is not None
+
+    finally:
+        app.dependency_overrides.clear()
+
+
+@pytest.mark.asyncio
+async def test_upload_work_audio_rejects_non_mp3_file(
+    db_session,
+    auth_headers,
+):
+    from unittest.mock import MagicMock
+
+    from app.core.storage import get_storage_service
+
+    exhibition = await create_exhibition(
+        db_session,
+        ExhibitionCreate(
+            title="Exposição com Áudio Inválido",
+            description="Exposição usada para testar validação de mídia.",
+        ),
+    )
+
+    work = await create_work(
+        db_session,
+        WorkCreate(
+            exhibition_id=exhibition.id,
+            title="Obra com Áudio Inválido",
+            description="Descrição da obra.",
+        ),
+    )
+
+    storage = MagicMock()
+
+    async def override_get_session():
+        yield db_session
+
+    def override_get_storage_service():
+        return storage
+
+    app.dependency_overrides[get_session] = override_get_session
+    app.dependency_overrides[get_storage_service] = override_get_storage_service
+
+    try:
+        async with AsyncClient(
+            transport=ASGITransport(app=app),
+            base_url="http://test",
+        ) as client:
+            response = await client.post(
+                f"/works/{work.id}/media/audio",
+                files={
+                    "file": (
+                        "documento.pdf",
+                        b"fake pdf content",
+                        "application/pdf",
+                    )
+                },
+                headers=auth_headers,
+            )
+
+        assert response.status_code == 415
+        assert response.json() == {"detail": "Only MP3 audio files are allowed"}
+
+        storage.upload.assert_not_called()
+
+        await db_session.refresh(work)
+        assert work.audio_url is None
+
+    finally:
+        app.dependency_overrides.clear()
+
+
+@pytest.mark.asyncio
+async def test_upload_work_audio_does_not_update_work_when_storage_fails(
+    db_session,
+    auth_headers,
+):
+    from unittest.mock import MagicMock
+
+    from app.core.storage import get_storage_service
+
+    exhibition = await create_exhibition(
+        db_session,
+        ExhibitionCreate(
+            title="Exposição Storage Failure",
+            description="Exposição usada para testar falha no storage.",
+        ),
+    )
+
+    work = await create_work(
+        db_session,
+        WorkCreate(
+            exhibition_id=exhibition.id,
+            title="Obra Storage Failure",
+            description="Descrição da obra.",
+        ),
+    )
+
+    storage = MagicMock()
+    storage.upload.side_effect = RuntimeError("Storage unavailable")
+
+    async def override_get_session():
+        yield db_session
+
+    def override_get_storage_service():
+        return storage
+
+    app.dependency_overrides[get_session] = override_get_session
+    app.dependency_overrides[get_storage_service] = override_get_storage_service
+
+    try:
+        async with AsyncClient(
+            transport=ASGITransport(
+                app=app,
+                raise_app_exceptions=False,
+            ),
+            base_url="http://test",
+        ) as client:
+            response = await client.post(
+                f"/works/{work.id}/media/audio",
+                files={
+                    "file": (
+                        "audio.mp3",
+                        b"ID3\x04\x00\x00\x00\x00\x00\x00fake audio data",
+                        "audio/mpeg",
+                    )
+                },
+                headers=auth_headers,
+            )
+
+        assert response.status_code == 500
+
+        await db_session.refresh(work)
+
+        assert work.audio_url is None
+
+    finally:
+        app.dependency_overrides.clear()
+
+
+@pytest.mark.asyncio
+async def test_upload_work_audio_returns_404_without_calling_storage_when_work_not_found(
+    db_session,
+    auth_headers,
+):
+    from unittest.mock import MagicMock
+
+    from app.core.storage import get_storage_service
+
+    storage = MagicMock()
+
+    async def override_get_session():
+        yield db_session
+
+    def override_get_storage_service():
+        return storage
+
+    app.dependency_overrides[get_session] = override_get_session
+    app.dependency_overrides[get_storage_service] = override_get_storage_service
+
+    try:
+        async with AsyncClient(
+            transport=ASGITransport(app=app),
+            base_url="http://test",
+        ) as client:
+            response = await client.post(
+                f"/works/{uuid4()}/media/audio",
+                files={
+                    "file": (
+                        "audio.mp3",
+                        b"fake mp3 content",
+                        "audio/mpeg",
+                    )
+                },
+                headers=auth_headers,
+            )
+
+        assert response.status_code == 404
+        assert response.json() == {"detail": "Work not found"}
+
+        storage.upload.assert_not_called()
+
+    finally:
+        app.dependency_overrides.clear()
+
+
+@pytest.mark.asyncio
+async def test_upload_work_audio_rejects_invalid_mp3_content(
+    db_session,
+    auth_headers,
+):
+    from unittest.mock import MagicMock
+
+    from app.core.storage import get_storage_service
+
+    exhibition = await create_exhibition(
+        db_session,
+        ExhibitionCreate(
+            title="Exposição MP3 Inválido",
+            description="Exposição usada para validar conteúdo do arquivo.",
+        ),
+    )
+
+    work = await create_work(
+        db_session,
+        WorkCreate(
+            exhibition_id=exhibition.id,
+            title="Obra MP3 Inválido",
+            description="Descrição da obra.",
+        ),
+    )
+
+    storage = MagicMock()
+
+    async def override_get_session():
+        yield db_session
+
+    def override_get_storage_service():
+        return storage
+
+    app.dependency_overrides[get_session] = override_get_session
+    app.dependency_overrides[get_storage_service] = override_get_storage_service
+
+    try:
+        async with AsyncClient(
+            transport=ASGITransport(app=app),
+            base_url="http://test",
+        ) as client:
+            response = await client.post(
+                f"/works/{work.id}/media/audio",
+                files={
+                    "file": (
+                        "audio.mp3",
+                        b"this is definitely not an mp3",
+                        "audio/mpeg",
+                    )
+                },
+                headers=auth_headers,
+            )
+
+        assert response.status_code == 415
+        assert response.json() == {"detail": "Invalid MP3 file"}
+
+        storage.upload.assert_not_called()
+
+        await db_session.refresh(work)
+        assert work.audio_url is None
+
+    finally:
+        app.dependency_overrides.clear()
+
+
+@pytest.mark.asyncio
+async def test_upload_work_audio_rejects_file_larger_than_10_mb(
+    db_session,
+    auth_headers,
+):
+    from unittest.mock import MagicMock
+
+    from app.core.storage import get_storage_service
+
+    exhibition = await create_exhibition(
+        db_session,
+        ExhibitionCreate(
+            title="Exposição Áudio Grande",
+            description="Exposição usada para testar limite de upload.",
+        ),
+    )
+
+    work = await create_work(
+        db_session,
+        WorkCreate(
+            exhibition_id=exhibition.id,
+            title="Obra Áudio Grande",
+            description="Descrição da obra.",
+        ),
+    )
+
+    storage = MagicMock()
+
+    async def override_get_session():
+        yield db_session
+
+    def override_get_storage_service():
+        return storage
+
+    app.dependency_overrides[get_session] = override_get_session
+    app.dependency_overrides[get_storage_service] = override_get_storage_service
+
+    try:
+        large_mp3 = b"ID3" + b"\x00" * (10 * 1024 * 1024)
+
+        async with AsyncClient(
+            transport=ASGITransport(app=app),
+            base_url="http://test",
+        ) as client:
+            response = await client.post(
+                f"/works/{work.id}/media/audio",
+                files={
+                    "file": (
+                        "audio.mp3",
+                        large_mp3,
+                        "audio/mpeg",
+                    )
+                },
+                headers=auth_headers,
+            )
+
+        assert response.status_code == 413
+        assert response.json() == {"detail": "Audio file exceeds the 10 MB limit"}
+
+        storage.upload.assert_not_called()
+
+        await db_session.refresh(work)
+        assert work.audio_url is None
+
+    finally:
+        app.dependency_overrides.clear()

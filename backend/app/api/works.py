@@ -2,6 +2,7 @@ from io import BytesIO
 from uuid import UUID
 
 from app.api.dependencies import get_current_admin
+from app.core.storage import get_storage_service
 from app.database.session import get_session
 from app.repositories.exhibition import get_exhibition_by_id
 from app.repositories.work import (
@@ -13,9 +14,11 @@ from app.repositories.work import (
 )
 from app.schemas.work import WorkCreate, WorkRead, WorkUpdate
 from app.services.qr_code import generate_qr_png
-from fastapi import APIRouter, Depends, HTTPException, status
+from app.services.storage import StorageService
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.concurrency import run_in_threadpool
 
 router = APIRouter(
     prefix="/works",
@@ -50,6 +53,79 @@ async def create_work_endpoint(
     )
 
     return work
+
+
+@router.post(
+    "/{work_id}/media/audio",
+    response_model=WorkRead,
+    status_code=status.HTTP_201_CREATED,
+)
+async def upload_work_audio(
+    work_id: UUID,
+    file: UploadFile = File(...),
+    session: AsyncSession = Depends(get_session),
+    storage: StorageService = Depends(get_storage_service),
+) -> WorkRead:
+    work = await get_work_by_id(session, work_id)
+
+    if work is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Work not found",
+        )
+
+    if file.content_type != "audio/mpeg":
+        raise HTTPException(
+            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            detail="Only MP3 audio files are allowed",
+        )
+
+    # Limite de 10 MB por arquivo de áudio
+    max_audio_size = 10 * 1024 * 1024
+
+    file.file.seek(0, 2)
+    file_size = file.file.tell()
+    file.file.seek(0)
+
+    if file_size > max_audio_size:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail="Audio file exceeds the 10 MB limit",
+        )
+
+    # Validação mínima do conteúdo MP3:
+    # ID3 tag ou início de MPEG frame.
+    header = await file.read(3)
+
+    is_id3 = header == b"ID3"
+    is_mpeg_frame = (
+        len(header) >= 2 and header[0] == 0xFF and (header[1] & 0xE0) == 0xE0
+    )
+
+    # A leitura acima avançou o ponteiro.
+    # Voltamos ao início antes de enviar ao storage.
+    await file.seek(0)
+
+    if not (is_id3 or is_mpeg_frame):
+        raise HTTPException(
+            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            detail="Invalid MP3 file",
+        )
+
+    object_key = f"works/{work.id}/audio/{work.id}.mp3"
+
+    await run_in_threadpool(
+        storage.upload,
+        file_object=file.file,
+        object_key=object_key,
+        content_type=file.content_type,
+    )
+
+    return await update_work(
+        session,
+        work,
+        WorkUpdate(audio_url=object_key),
+    )
 
 
 @router.get(

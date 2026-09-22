@@ -18,6 +18,10 @@ class Settings(BaseSettings):
     public_frontend_url: str
     algorithm: str
     access_token_expires_minutes: int = 60
+    storage_endpoint_url: str
+    storage_access_key_id: str
+    storage_secret_access_key: str
+    storage_bucket_name: str
 
 
 settings = Settings()

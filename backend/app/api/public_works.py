@@ -1,9 +1,13 @@
+from app.core.storage import get_storage_service
 from app.database.session import get_session
 from app.repositories.access_event import create_access_event
 from app.repositories.work import get_work_by_public_slug
 from app.schemas.public_work import PublicWorkRead
+from app.services.storage import StorageService
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.concurrency import run_in_threadpool
 
 router = APIRouter(
     prefix="/public/works",
@@ -32,6 +36,43 @@ async def get_public_work_endpoint(
         )
 
     return work
+
+
+@router.get(
+    "/{public_slug}/media/audio",
+    status_code=status.HTTP_200_OK,
+)
+async def get_public_work_audio(
+    public_slug: str,
+    session: AsyncSession = Depends(get_session),
+    storage: StorageService = Depends(get_storage_service),
+):
+    work = await get_work_by_public_slug(
+        session,
+        public_slug,
+    )
+
+    if work is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Work not found",
+        )
+
+    if not work.audio_url:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Audio not found",
+        )
+
+    audio_file = await run_in_threadpool(
+        storage.download,
+        object_key=work.audio_url,
+    )
+
+    return StreamingResponse(
+        audio_file,
+        media_type="audio/mpeg",
+    )
 
 
 @router.post(

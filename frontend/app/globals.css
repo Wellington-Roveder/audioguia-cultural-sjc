@@ -25,13 +25,14 @@ body {
 
 button,
 a,
-audio {
+audio,
+video {
   font: inherit;
 }
 
 /* ─────────────────────────────────────────────
    Página pública da obra
-   ───────────────────────────────────────────── */
+   ────────────────────────────────────────────── */
 
 .work-page {
   min-height: 100vh;
@@ -94,16 +95,31 @@ audio {
 }
 
 .media-block {
-  margin-bottom: 24px;
+  margin-bottom: 28px;
+}
+
+.media-block:last-child {
+  margin-bottom: 0;
 }
 
 .media-block h3 {
   margin: 0 0 10px;
   font-size: 1rem;
+  font-weight: 500;
 }
 
-.media-block audio {
+.media-block audio,
+.media-block video {
+  display: block;
   width: 100%;
+  max-width: 100%;
+}
+
+.media-block video {
+  height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: contain;
+  background: #000000;
 }
 
 .work-link {
@@ -139,7 +155,7 @@ audio {
 
 /* ─────────────────────────────────────────────
    Tablet / desktop
-   ───────────────────────────────────────────── */
+   ────────────────────────────────────────────── */
 
 @media (min-width: 768px) {
   .work-page {
@@ -153,40 +169,69 @@ audio {
 
 /* ─────────────────────────────────────────────
    Celulares menores
-   ───────────────────────────────────────────── */
+   ────────────────────────────────────────────── */
 
 @media (max-width: 480px) {
   .work-page {
-    padding: 16px 12px;
+    padding: 12px;
   }
 
   .work-card {
-    padding: 24px 18px;
+    padding: 22px 16px;
     border-radius: 16px;
   }
 
   .work-header {
-    margin-bottom: 24px;
+    margin-bottom: 22px;
+  }
+
+  .work-eyebrow {
+    margin-bottom: 10px;
+    font-size: 0.75rem;
   }
 
   .work-header h1 {
     font-size: clamp(1.8rem, 9vw, 2.4rem);
-    line-height: 1.1;
+    line-height: 1.08;
   }
 
   .work-description {
-    font-size: 1rem;
-    line-height: 1.6;
+    font-size: 0.95rem;
+    line-height: 1.55;
+  }
+
+  .work-content {
+    margin-bottom: 28px;
+  }
+
+  .work-accessibility {
+    padding-top: 24px;
+  }
+
+  .work-accessibility h2 {
+    margin-bottom: 20px;
+    font-size: 1.25rem;
+  }
+
+  .media-block {
+    margin-bottom: 26px;
+  }
+
+  .media-block h3 {
+    margin-bottom: 8px;
+    font-size: 0.95rem;
   }
 
   .work-footer {
     margin-top: 28px;
+    padding-top: 18px;
+    line-height: 1.5;
   }
 }
 
 /* ─────────────────────────────────────────────
    Preferência por movimento reduzido
-   ───────────────────────────────────────────── */
+   ────────────────────────────────────────────── */
 
 @media (prefers-reduced-motion: reduce) {
   *,

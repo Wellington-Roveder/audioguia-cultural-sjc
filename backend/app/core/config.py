@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     storage_access_key_id: str
     storage_secret_access_key: str
     storage_bucket_name: str
+    cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
 
 
 settings = Settings()

@@ -3,6 +3,7 @@ from app.api.exhibitions import router as exhibitions_router
 from app.api.metrics import router as metrics_router
 from app.api.public_works import router as public_works_router
 from app.api.works import router as works_router
+from app.core.config import settings
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -13,8 +14,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
+        origin.strip() for origin in settings.cors_origins.split(",") if origin.strip()
     ],
     allow_credentials=True,
     allow_methods=["*"],

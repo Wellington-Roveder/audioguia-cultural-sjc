@@ -879,3 +879,159 @@ async def test_upload_work_audio_rejects_file_larger_than_10_mb(
 
     finally:
         app.dependency_overrides.clear()
+
+
+@pytest.mark.asyncio
+async def test_upload_work_audio_description_stores_file_and_updates_work(
+    db_session,
+    auth_headers,
+):
+    from unittest.mock import MagicMock
+
+    from app.core.storage import get_storage_service
+
+    exhibition = await create_exhibition(
+        db_session,
+        ExhibitionCreate(
+            title="Exposição Audiodescrição",
+            description="Exposição usada para testar audiodescrição.",
+        ),
+    )
+
+    work = await create_work(
+        db_session,
+        WorkCreate(
+            exhibition_id=exhibition.id,
+            title="Obra com Audiodescrição",
+            description="Descrição da obra.",
+        ),
+    )
+
+    storage = MagicMock()
+
+    async def override_get_session():
+        yield db_session
+
+    def override_get_storage_service():
+        return storage
+
+    app.dependency_overrides[get_session] = override_get_session
+    app.dependency_overrides[get_storage_service] = override_get_storage_service
+
+    try:
+        mp3_content = b"ID3\x04\x00\x00\x00\x00\x00\x00fake audio description"
+
+        async with AsyncClient(
+            transport=ASGITransport(app=app),
+            base_url="http://test",
+        ) as client:
+            response = await client.post(
+                f"/works/{work.id}/media/audio-description",
+                files={
+                    "file": (
+                        "audiodescricao.mp3",
+                        mp3_content,
+                        "audio/mpeg",
+                    )
+                },
+                headers=auth_headers,
+            )
+
+        assert response.status_code == 201
+
+        storage.upload.assert_called_once()
+
+        upload_call = storage.upload.call_args.kwargs
+
+        assert upload_call["content_type"] == "audio/mpeg"
+        assert str(work.id) in upload_call["object_key"]
+        assert "audio-description" in upload_call["object_key"]
+        assert upload_call["object_key"].endswith(".mp3")
+
+        await db_session.refresh(work)
+
+        assert work.audio_description_url is not None
+
+    finally:
+        app.dependency_overrides.clear()
+
+
+@pytest.mark.asyncio
+async def test_upload_work_libras_video_stores_file_and_updates_work(
+    db_session,
+    auth_headers,
+):
+    from unittest.mock import MagicMock
+
+    from app.core.storage import get_storage_service
+
+    exhibition = await create_exhibition(
+        db_session,
+        ExhibitionCreate(
+            title="Exposição Libras",
+            description="Exposição usada para testar vídeo em Libras.",
+        ),
+    )
+
+    work = await create_work(
+        db_session,
+        WorkCreate(
+            exhibition_id=exhibition.id,
+            title="Obra com Libras",
+            description="Descrição da obra.",
+        ),
+    )
+
+    storage = MagicMock()
+
+    async def override_get_session():
+        yield db_session
+
+    def override_get_storage_service():
+        return storage
+
+    app.dependency_overrides[get_session] = override_get_session
+    app.dependency_overrides[get_storage_service] = override_get_storage_service
+
+    try:
+        # Assinatura mínima compatível com container MP4:
+        # size + "ftyp"
+        mp4_content = (
+            b"\x00\x00\x00\x18ftypmp42\x00\x00\x00\x00mp42isomfake video content"
+        )
+
+        async with AsyncClient(
+            transport=ASGITransport(app=app),
+            base_url="http://test",
+        ) as client:
+            response = await client.post(
+                f"/works/{work.id}/media/libras",
+                files={
+                    "file": (
+                        "libras.mp4",
+                        mp4_content,
+                        "video/mp4",
+                    )
+                },
+                headers=auth_headers,
+            )
+
+        print(response.status_code)
+        print(response.json())
+        assert response.status_code == 201
+
+        storage.upload.assert_called_once()
+
+        upload_call = storage.upload.call_args.kwargs
+
+        assert upload_call["content_type"] == "video/mp4"
+        assert str(work.id) in upload_call["object_key"]
+        assert "libras" in upload_call["object_key"]
+        assert upload_call["object_key"].endswith(".mp4")
+
+        await db_session.refresh(work)
+
+        assert work.libras_video_url is not None
+
+    finally:
+        app.dependency_overrides.clear()

@@ -526,3 +526,123 @@ async def test_get_public_work_audio_returns_500_when_storage_fails(
 
     finally:
         app.dependency_overrides.clear()
+
+
+@pytest.mark.asyncio
+async def test_get_public_work_audio_description_returns_mp3(
+    db_session,
+):
+    from io import BytesIO
+    from unittest.mock import MagicMock
+
+    from app.core.storage import get_storage_service
+
+    exhibition = await create_exhibition(
+        db_session,
+        ExhibitionCreate(
+            title="Exposição com Audiodescrição",
+            description="Exposição pública com audiodescrição.",
+        ),
+    )
+
+    work = await create_work(
+        db_session,
+        WorkCreate(
+            exhibition_id=exhibition.id,
+            title="Obra com Audiodescrição",
+            description="Descrição da obra.",
+            audio_description_url=("works/test/audio-description/audio.mp3"),
+        ),
+    )
+
+    storage = MagicMock()
+    storage.download.return_value = BytesIO(b"fake audio description")
+
+    async def override_get_session():
+        yield db_session
+
+    def override_get_storage_service():
+        return storage
+
+    app.dependency_overrides[get_session] = override_get_session
+    app.dependency_overrides[get_storage_service] = override_get_storage_service
+
+    try:
+        async with AsyncClient(
+            transport=ASGITransport(app=app),
+            base_url="http://test",
+        ) as client:
+            response = await client.get(
+                f"/public/works/{work.public_slug}/media/audio-description"
+            )
+
+        assert response.status_code == 200
+        assert response.headers["content-type"] == "audio/mpeg"
+        assert response.content == b"fake audio description"
+
+        storage.download.assert_called_once_with(
+            object_key=("works/test/audio-description/audio.mp3")
+        )
+
+    finally:
+        app.dependency_overrides.clear()
+
+
+@pytest.mark.asyncio
+async def test_get_public_work_libras_video_returns_mp4(
+    db_session,
+):
+    from io import BytesIO
+    from unittest.mock import MagicMock
+
+    from app.core.storage import get_storage_service
+
+    exhibition = await create_exhibition(
+        db_session,
+        ExhibitionCreate(
+            title="Exposição com Libras",
+            description="Exposição pública com vídeo em Libras.",
+        ),
+    )
+
+    work = await create_work(
+        db_session,
+        WorkCreate(
+            exhibition_id=exhibition.id,
+            title="Obra com Libras",
+            description="Descrição da obra.",
+            libras_video_url="works/test/libras/video.mp4",
+        ),
+    )
+
+    storage = MagicMock()
+    storage.download.return_value = BytesIO(b"fake mp4 content")
+
+    async def override_get_session():
+        yield db_session
+
+    def override_get_storage_service():
+        return storage
+
+    app.dependency_overrides[get_session] = override_get_session
+    app.dependency_overrides[get_storage_service] = override_get_storage_service
+
+    try:
+        async with AsyncClient(
+            transport=ASGITransport(app=app),
+            base_url="http://test",
+        ) as client:
+            response = await client.get(
+                f"/public/works/{work.public_slug}/media/libras"
+            )
+
+        assert response.status_code == 200
+        assert response.headers["content-type"] == "video/mp4"
+        assert response.content == b"fake mp4 content"
+
+        storage.download.assert_called_once_with(
+            object_key="works/test/libras/video.mp4"
+        )
+
+    finally:
+        app.dependency_overrides.clear()

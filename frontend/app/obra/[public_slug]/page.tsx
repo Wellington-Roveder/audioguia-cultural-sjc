@@ -63,6 +63,21 @@ export default async function PublicWorkPage({
     )
   }
 
+  const apiUrl = process.env.API_URL
+
+  if (!apiUrl) {
+    throw new Error("API_URL is not configured")
+  }
+
+  const audioUrl =
+    `${apiUrl}/public/works/${public_slug}/media/audio`
+
+  const audioDescriptionUrl =
+    `${apiUrl}/public/works/${public_slug}/media/audio-description`
+
+  const librasVideoUrl =
+    `${apiUrl}/public/works/${public_slug}/media/libras`
+
   return (
     <main className="work-page">
       <AccessTracker publicSlug={public_slug} />
@@ -106,7 +121,7 @@ export default async function PublicWorkPage({
                 <audio
                   controls
                   preload="metadata"
-                  src={work.audio_url}
+                  src={audioUrl}
                 >
                   Seu navegador não suporta áudio.
                 </audio>
@@ -120,7 +135,7 @@ export default async function PublicWorkPage({
                 <audio
                   controls
                   preload="metadata"
-                  src={work.audio_description_url}
+                  src={audioDescriptionUrl}
                 >
                   Seu navegador não suporta áudio.
                 </audio>
@@ -128,14 +143,17 @@ export default async function PublicWorkPage({
             )}
 
             {work.libras_video_url && (
-              <a
-                className="work-link"
-                href={work.libras_video_url}
-                target="_blank"
-                rel="noreferrer"
-              >
-                Ver conteúdo em Libras
-              </a>
+              <div className="media-block">
+                <h3>Vídeo em Libras</h3>
+
+                <video
+                  controls
+                  preload="metadata"
+                  src={librasVideoUrl}
+                >
+                  Seu navegador não suporta vídeo.
+                </video>
+              </div>
             )}
           </section>
         )}

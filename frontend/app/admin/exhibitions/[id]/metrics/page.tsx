@@ -1,179 +1,227 @@
-import { cookies } from "next/headers";
-import Link from "next/link";
-import { redirect } from "next/navigation";
+import { cookies } from "next/headers"
+import Link from "next/link"
+import { redirect } from "next/navigation"
 
 type Work = {
-  id: string;
-  title: string;
-};
+  id: string
+  title: string
+}
 
 type ExhibitionMetrics = {
-  exhibition_id: string;
-  access_count: number;
-};
+  exhibition_id: string
+  access_count: number
+}
 
 type WorkMetrics = {
-  work_id: string;
-  access_count: number;
-};
+  work_id: string
+  access_count: number
+}
 
 type MetricsPageProps = {
   params: Promise<{
-    id: string;
-  }>;
-};
+    id: string
+  }>
+}
 
 async function authenticatedFetch(
   url: string,
-  token: string,
+  token: string
 ): Promise<Response> {
   const response = await fetch(url, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
     cache: "no-store",
-  });
+  })
 
   if (response.status === 401) {
-    redirect("/admin/login");
+    redirect("/admin/login")
   }
 
-  return response;
+  return response
 }
 
 async function getExhibitionMetrics(
   exhibitionId: string,
-  token: string,
+  token: string
 ): Promise<ExhibitionMetrics> {
-  const apiUrl = process.env.API_URL;
+  const apiUrl = process.env.API_URL
 
   if (!apiUrl) {
-    throw new Error("API_URL is not configured");
+    throw new Error("API_URL is not configured")
   }
 
   const response = await authenticatedFetch(
     `${apiUrl}/metrics/exhibitions/${exhibitionId}`,
-    token,
-  );
+    token
+  )
 
   if (!response.ok) {
-    throw new Error("Failed to load exhibition metrics");
+    throw new Error(
+      "Failed to load exhibition metrics"
+    )
   }
 
-  return response.json();
+  return response.json()
 }
 
 async function getWorks(
   exhibitionId: string,
-  token: string,
+  token: string
 ): Promise<Work[]> {
-  const apiUrl = process.env.API_URL;
+  const apiUrl = process.env.API_URL
 
   if (!apiUrl) {
-    throw new Error("API_URL is not configured");
+    throw new Error("API_URL is not configured")
   }
 
   const response = await authenticatedFetch(
     `${apiUrl}/works/by-exhibition/${exhibitionId}`,
-    token,
-  );
+    token
+  )
 
   if (response.status === 404) {
-    return [];
+    return []
   }
 
   if (!response.ok) {
-    throw new Error("Failed to load works");
+    throw new Error("Failed to load works")
   }
 
-  return response.json();
+  return response.json()
 }
 
 async function getWorkMetrics(
   workId: string,
-  token: string,
+  token: string
 ): Promise<WorkMetrics> {
-  const apiUrl = process.env.API_URL;
+  const apiUrl = process.env.API_URL
 
   if (!apiUrl) {
-    throw new Error("API_URL is not configured");
+    throw new Error("API_URL is not configured")
   }
 
   const response = await authenticatedFetch(
     `${apiUrl}/metrics/works/${workId}`,
-    token,
-  );
+    token
+  )
 
   if (!response.ok) {
-    throw new Error("Failed to load work metrics");
+    throw new Error("Failed to load work metrics")
   }
 
-  return response.json();
+  return response.json()
 }
 
 export default async function MetricsPage({
   params,
 }: MetricsPageProps) {
-  const { id } = await params;
+  const { id } = await params
 
-  const cookieStore = await cookies();
-  const session = cookieStore.get("admin_session");
+  const cookieStore = await cookies()
+  const session = cookieStore.get("admin_session")
 
   if (!session) {
-    redirect("/admin/login");
+    redirect("/admin/login")
   }
 
-  const [exhibitionMetrics, works] = await Promise.all([
-    getExhibitionMetrics(id, session.value),
-    getWorks(id, session.value),
-  ]);
+  const [exhibitionMetrics, works] =
+    await Promise.all([
+      getExhibitionMetrics(id, session.value),
+      getWorks(id, session.value),
+    ])
 
   const workMetrics = await Promise.all(
     works.map(async (work) => {
       const metrics = await getWorkMetrics(
         work.id,
-        session.value,
-      );
+        session.value
+      )
 
       return {
         ...work,
         access_count: metrics.access_count,
-      };
-    }),
-  );
+      }
+    })
+  )
 
   return (
-    <main>
-      <h1>Métricas da exposição</h1>
+    <main className="admin-page">
+      <div className="admin-container">
+        <header className="admin-form-header">
+          <div>
+            <p className="admin-eyebrow">
+              Audioguia Cultural SJC
+            </p>
 
-      <p>
-        <Link href="/admin">Voltar ao painel</Link>
-      </p>
+            <h1>Métricas da exposição</h1>
 
-      <section>
-        <h2>Acessos da exposição</h2>
-        <p>
-          Total de acessos:{" "}
-          <strong>{exhibitionMetrics.access_count}</strong>
-        </p>
-      </section>
+            <p>
+              Acompanhe os acessos à exposição e às
+              obras cadastradas.
+            </p>
+          </div>
 
-      <section>
-        <h2>Acessos por obra</h2>
+          <Link
+            className="admin-back-link"
+            href="/admin"
+          >
+            Voltar ao painel
+          </Link>
+        </header>
 
-        {workMetrics.length === 0 ? (
-          <p>Nenhuma obra cadastrada.</p>
-        ) : (
-          <ul>
-            {workMetrics.map((work) => (
-              <li key={work.id}>
-                <strong>{work.title}</strong>
-                <p>{work.access_count} acessos</p>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+        <section className="metrics-summary">
+          <p className="metrics-label">
+            Total de acessos
+          </p>
+
+          <strong className="metrics-total">
+            {exhibitionMetrics.access_count}
+          </strong>
+
+          <p className="metrics-description">
+            acessos registrados nesta exposição
+          </p>
+        </section>
+
+        <section className="admin-section">
+          <div className="admin-section-header">
+            <div>
+              <h2>Acessos por obra</h2>
+
+              <p>
+                Visualize quantos acessos cada obra
+                recebeu.
+              </p>
+            </div>
+          </div>
+
+          {workMetrics.length === 0 ? (
+            <div className="admin-empty-state">
+              <p>Nenhuma obra cadastrada.</p>
+            </div>
+          ) : (
+            <div className="metrics-work-list">
+              {workMetrics.map((work) => (
+                <article
+                  className="metrics-work-card"
+                  key={work.id}
+                >
+                  <div>
+                    <h3>{work.title}</h3>
+
+                    <p>Acessos registrados</p>
+                  </div>
+
+                  <strong className="metrics-work-count">
+                    {work.access_count}
+                  </strong>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
+      </div>
     </main>
-  );
+  )
 }

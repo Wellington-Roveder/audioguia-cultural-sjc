@@ -1,30 +1,32 @@
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
-import EditForm from "./EditForm";
+import { cookies } from "next/headers"
+import { redirect } from "next/navigation"
+import Link from "next/link"
+
+import EditForm from "./EditForm"
 
 type Exhibition = {
-  id: string;
-  title: string;
-  description: string | null;
-  start_date: string | null;
-  end_date: string | null;
-  is_active: boolean;
-};
+  id: string
+  title: string
+  description: string | null
+  start_date: string | null
+  end_date: string | null
+  is_active: boolean
+}
 
 type EditExhibitionPageProps = {
   params: Promise<{
-    id: string;
-  }>;
-};
+    id: string
+  }>
+}
 
 async function getExhibition(
   id: string,
-  token: string,
+  token: string
 ): Promise<Exhibition | null> {
-  const apiUrl = process.env.API_URL;
+  const apiUrl = process.env.API_URL
 
   if (!apiUrl) {
-    throw new Error("API_URL is not configured");
+    throw new Error("API_URL is not configured")
   }
 
   const response = await fetch(
@@ -34,76 +36,88 @@ async function getExhibition(
         Authorization: `Bearer ${token}`,
       },
       cache: "no-store",
-    },
-  );
+    }
+  )
 
   if (response.status === 401) {
-    redirect("/admin/login");
+    redirect("/admin/login")
   }
 
   if (response.status === 404) {
-    return null;
+    return null
   }
 
   if (!response.ok) {
-    throw new Error("Failed to load exhibition");
+    throw new Error("Failed to load exhibition")
   }
 
-  return response.json();
+  return response.json()
 }
 
 export default async function EditExhibitionPage({
   params,
 }: EditExhibitionPageProps) {
-  const { id } = await params;
+  const { id } = await params
 
-  const cookieStore = await cookies();
-  const session = cookieStore.get("admin_session");
+  const cookieStore = await cookies()
+  const session = cookieStore.get("admin_session")
 
   if (!session) {
-    redirect("/admin/login");
+    redirect("/admin/login")
   }
 
   const exhibition = await getExhibition(
     id,
-    session.value,
-  );
+    session.value
+  )
 
   if (!exhibition) {
     return (
-      <main>
-        <h1>Exposição não encontrada</h1>
+      <main className="admin-page">
+        <div className="admin-container">
+          <section className="admin-form-card">
+            <h1>Exposição não encontrada</h1>
+
+            <Link
+              className="admin-back-link"
+              href="/admin"
+            >
+              Voltar ao painel
+            </Link>
+          </section>
+        </div>
       </main>
-    );
+    )
   }
 
   return (
-    <main>
-      <h1>Editar exposição</h1>
-      <EditForm exhibition={exhibition} />
-      <p>
-        <strong>Título:</strong> {exhibition.title}
-      </p>
+    <main className="admin-page">
+      <div className="admin-container admin-form-container">
+        <header className="admin-form-header">
+          <div>
+            <p className="admin-eyebrow">
+              Audioguia Cultural SJC
+            </p>
 
-      <p>
-        <strong>Descrição:</strong>{" "}
-        {exhibition.description ?? "Sem descrição"}
-      </p>
+            <h1>Editar exposição</h1>
 
-      <p>
-        <strong>Data de início:</strong>{" "}
-        {exhibition.start_date ?? "Não informada"}
-      </p>
+            <p>
+              Atualize as informações da exposição.
+            </p>
+          </div>
 
-      <p>
-        <strong>Data de término:</strong>{" "}
-        {exhibition.end_date ?? "Não informada"}
-      </p>
+          <Link
+            className="admin-back-link"
+            href="/admin"
+          >
+            Voltar ao painel
+          </Link>
+        </header>
 
-      <p>
-        <strong>Status:</strong>{" "}
-        {exhibition.is_active ? "Ativa" : "Inativa"}
-      </p>
+        <section className="admin-form-card">
+          <EditForm exhibition={exhibition} />
+        </section>
+      </div>
     </main>
-  );
+  )
 }

@@ -308,61 +308,77 @@ export default function EditForm({
       setUploadingLibras(false)
     }
   }
-
   return (
-    <form onSubmit={handleSubmit}>
-      <div>
-        <label htmlFor="title">Título</label>
-        <input
-          id="title"
-          type="text"
-          maxLength={150}
-          value={title}
-          onChange={(event) =>
-            setTitle(event.target.value)
-          }
-          required
-        />
+  <form
+    className="admin-form-card admin-form"
+    onSubmit={handleSubmit}
+  >
+    <div className="admin-field">
+      <label htmlFor="title">Título</label>
+
+      <input
+        id="title"
+        type="text"
+        maxLength={150}
+        value={title}
+        onChange={(event) =>
+          setTitle(event.target.value)
+        }
+        required
+      />
+    </div>
+
+    <div className="admin-field">
+      <label htmlFor="artist">Artista</label>
+
+      <input
+        id="artist"
+        type="text"
+        maxLength={150}
+        value={artist}
+        onChange={(event) =>
+          setArtist(event.target.value)
+        }
+      />
+    </div>
+
+    <div className="admin-field">
+      <label htmlFor="description">
+        Descrição
+      </label>
+
+      <textarea
+        id="description"
+        rows={7}
+        value={description}
+        onChange={(event) =>
+          setDescription(event.target.value)
+        }
+        required
+      />
+    </div>
+
+    <div className="admin-media-section">
+      <div className="admin-media-heading">
+        <div>
+          <h2>Recursos de acessibilidade</h2>
+          <p>
+            Gerencie os arquivos disponibilizados
+            na página pública da obra.
+          </p>
+        </div>
       </div>
 
-      <div>
-        <label htmlFor="artist">Artista</label>
-        <input
-          id="artist"
-          type="text"
-          maxLength={150}
-          value={artist}
-          onChange={(event) =>
-            setArtist(event.target.value)
-          }
-        />
-      </div>
-
-      <div>
-        <label htmlFor="description">
-          Descrição
-        </label>
-
-        <textarea
-          id="description"
-          value={description}
-          onChange={(event) =>
-            setDescription(event.target.value)
-          }
-          required
-        />
-      </div>
-
-      <fieldset>
+      <fieldset className="admin-media-card">
         <legend>Áudio da obra</legend>
 
-        <p>
+        <p className="admin-media-status">
           {hasAudio
-            ? "Áudio cadastrado."
-            : "Nenhum áudio cadastrado."}
+            ? "✓ Áudio cadastrado"
+            : "Nenhum áudio cadastrado"}
         </p>
 
-        <div>
+        <div className="admin-field">
           <label htmlFor="audio-file">
             Arquivo MP3
           </label>
@@ -382,14 +398,25 @@ export default function EditForm({
         </div>
 
         {audioError && (
-          <p role="alert">{audioError}</p>
+          <p
+            className="admin-form-error"
+            role="alert"
+          >
+            {audioError}
+          </p>
         )}
 
         {audioSuccess && (
-          <p role="status">{audioSuccess}</p>
+          <p
+            className="admin-form-success"
+            role="status"
+          >
+            {audioSuccess}
+          </p>
         )}
 
         <button
+          className="admin-secondary-button"
           type="button"
           onClick={handleAudioUpload}
           disabled={uploadingAudio || !audioFile}
@@ -402,16 +429,16 @@ export default function EditForm({
         </button>
       </fieldset>
 
-      <fieldset>
+      <fieldset className="admin-media-card">
         <legend>Audiodescrição</legend>
 
-        <p>
+        <p className="admin-media-status">
           {hasAudioDescription
-            ? "Audiodescrição cadastrada."
-            : "Nenhuma audiodescrição cadastrada."}
+            ? "✓ Audiodescrição cadastrada"
+            : "Nenhuma audiodescrição cadastrada"}
         </p>
 
-        <div>
+        <div className="admin-field">
           <label htmlFor="audio-description-file">
             Arquivo MP3
           </label>
@@ -431,18 +458,25 @@ export default function EditForm({
         </div>
 
         {audioDescriptionError && (
-          <p role="alert">
+          <p
+            className="admin-form-error"
+            role="alert"
+          >
             {audioDescriptionError}
           </p>
         )}
 
         {audioDescriptionSuccess && (
-          <p role="status">
+          <p
+            className="admin-form-success"
+            role="status"
+          >
             {audioDescriptionSuccess}
           </p>
         )}
 
         <button
+          className="admin-secondary-button"
           type="button"
           onClick={handleAudioDescriptionUpload}
           disabled={
@@ -458,16 +492,16 @@ export default function EditForm({
         </button>
       </fieldset>
 
-      <fieldset>
+      <fieldset className="admin-media-card">
         <legend>Vídeo em Libras</legend>
 
-        <p>
+        <p className="admin-media-status">
           {hasLibrasVideo
-            ? "Vídeo em Libras cadastrado."
-            : "Nenhum vídeo em Libras cadastrado."}
+            ? "✓ Vídeo em Libras cadastrado"
+            : "Nenhum vídeo em Libras cadastrado"}
         </p>
 
-        <div>
+        <div className="admin-field">
           <label htmlFor="libras-file">
             Arquivo MP4
           </label>
@@ -487,14 +521,25 @@ export default function EditForm({
         </div>
 
         {librasError && (
-          <p role="alert">{librasError}</p>
+          <p
+            className="admin-form-error"
+            role="alert"
+          >
+            {librasError}
+          </p>
         )}
 
         {librasSuccess && (
-          <p role="status">{librasSuccess}</p>
+          <p
+            className="admin-form-success"
+            role="status"
+          >
+            {librasSuccess}
+          </p>
         )}
 
         <button
+          className="admin-secondary-button"
           type="button"
           onClick={handleLibrasUpload}
           disabled={uploadingLibras || !librasFile}
@@ -506,25 +551,32 @@ export default function EditForm({
               : "Enviar vídeo em Libras"}
         </button>
       </fieldset>
+    </div>
 
-      <div>
-        <label>
-          <input
-            type="checkbox"
-            checked={isActive}
-            onChange={(event) =>
-              setIsActive(event.target.checked)
-            }
-          />
-          Obra ativa
-        </label>
-      </div>
+    <label className="admin-checkbox">
+      <input
+        type="checkbox"
+        checked={isActive}
+        onChange={(event) =>
+          setIsActive(event.target.checked)
+        }
+      />
 
-      {error && (
-        <p role="alert">{error}</p>
-      )}
+      <span>Obra ativa</span>
+    </label>
 
+    {error && (
+      <p
+        className="admin-form-error"
+        role="alert"
+      >
+        {error}
+      </p>
+    )}
+
+    <div className="admin-form-actions">
       <button
+        className="admin-submit-button"
         type="submit"
         disabled={submitting}
       >
@@ -532,6 +584,20 @@ export default function EditForm({
           ? "Salvando..."
           : "Salvar alterações"}
       </button>
-    </form>
-  )
+
+      <button
+        className="admin-cancel-link"
+        type="button"
+        onClick={() =>
+          router.push(
+            `/admin/exhibitions/${exhibitionId}/works`
+          )
+        }
+      >
+        Cancelar
+      </button>
+    </div>
+  </form>
+)
+ 
 }

@@ -1,48 +1,49 @@
-"use client";
+"use client"
 
-import { FormEvent, useState } from "react";
-import { useRouter } from "next/navigation";
+import { FormEvent, useState } from "react"
+import { useRouter } from "next/navigation"
+import Link from "next/link"
 
 type Exhibition = {
-  id: string;
-  title: string;
-  description: string | null;
-  start_date: string | null;
-  end_date: string | null;
-  is_active: boolean;
-};
+  id: string
+  title: string
+  description: string | null
+  start_date: string | null
+  end_date: string | null
+  is_active: boolean
+}
 
 export default function EditForm({
   exhibition,
 }: {
-  exhibition: Exhibition;
+  exhibition: Exhibition
 }) {
-  const router = useRouter();
+  const router = useRouter()
 
-  const [title, setTitle] = useState(exhibition.title);
+  const [title, setTitle] = useState(exhibition.title)
   const [description, setDescription] = useState(
-    exhibition.description ?? "",
-  );
+    exhibition.description ?? ""
+  )
   const [startDate, setStartDate] = useState(
-    exhibition.start_date ?? "",
-  );
+    exhibition.start_date ?? ""
+  )
   const [endDate, setEndDate] = useState(
-    exhibition.end_date ?? "",
-  );
+    exhibition.end_date ?? ""
+  )
   const [isActive, setIsActive] = useState(
-    exhibition.is_active,
-  );
+    exhibition.is_active
+  )
 
-  const [error, setError] = useState("");
-  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("")
+  const [submitting, setSubmitting] = useState(false)
 
   async function handleSubmit(
-    event: FormEvent<HTMLFormElement>,
+    event: FormEvent<HTMLFormElement>
   ) {
-    event.preventDefault();
+    event.preventDefault()
 
-    setError("");
-    setSubmitting(true);
+    setError("")
+    setSubmitting(true)
 
     try {
       const response = await fetch(
@@ -59,45 +60,61 @@ export default function EditForm({
             end_date: endDate || null,
             is_active: isActive,
           }),
-        },
-      );
+        }
+      )
 
       if (response.status === 401) {
-        router.push("/admin/login");
-        return;
+        router.push("/admin/login")
+        return
       }
 
       if (!response.ok) {
-        setError("Não foi possível atualizar a exposição.");
-        return;
+        setError(
+          "Não foi possível atualizar a exposição."
+        )
+        return
       }
 
-      router.push("/admin");
-      router.refresh();
+      router.push("/admin")
+      router.refresh()
     } catch {
-      setError("Não foi possível atualizar a exposição.");
+      setError(
+        "Não foi possível atualizar a exposição."
+      )
     } finally {
-      setSubmitting(false);
+      setSubmitting(false)
     }
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div>
-        <label htmlFor="title">Título</label>
+    <form
+      className="admin-form"
+      onSubmit={handleSubmit}
+    >
+      <div className="admin-field">
+        <label htmlFor="title">
+          Título
+        </label>
+
         <input
           id="title"
           type="text"
           value={title}
-          onChange={(event) => setTitle(event.target.value)}
+          onChange={(event) =>
+            setTitle(event.target.value)
+          }
           required
         />
       </div>
 
-      <div>
-        <label htmlFor="description">Descrição</label>
+      <div className="admin-field">
+        <label htmlFor="description">
+          Descrição
+        </label>
+
         <textarea
           id="description"
+          rows={6}
           value={description}
           onChange={(event) =>
             setDescription(event.target.value)
@@ -105,48 +122,77 @@ export default function EditForm({
         />
       </div>
 
-      <div>
-        <label htmlFor="start-date">Data de início</label>
-        <input
-          id="start-date"
-          type="date"
-          value={startDate}
-          onChange={(event) =>
-            setStartDate(event.target.value)
-          }
-        />
-      </div>
+      <div className="admin-date-grid">
+        <div className="admin-field">
+          <label htmlFor="start-date">
+            Data de início
+          </label>
 
-      <div>
-        <label htmlFor="end-date">Data de término</label>
-        <input
-          id="end-date"
-          type="date"
-          value={endDate}
-          onChange={(event) =>
-            setEndDate(event.target.value)
-          }
-        />
-      </div>
-
-      <div>
-        <label>
           <input
-            type="checkbox"
-            checked={isActive}
+            id="start-date"
+            type="date"
+            value={startDate}
             onChange={(event) =>
-              setIsActive(event.target.checked)
+              setStartDate(event.target.value)
             }
           />
-          Exposição ativa
-        </label>
+        </div>
+
+        <div className="admin-field">
+          <label htmlFor="end-date">
+            Data de término
+          </label>
+
+          <input
+            id="end-date"
+            type="date"
+            value={endDate}
+            onChange={(event) =>
+              setEndDate(event.target.value)
+            }
+          />
+        </div>
       </div>
 
-      {error && <p>{error}</p>}
+      <label className="admin-checkbox">
+        <input
+          type="checkbox"
+          checked={isActive}
+          onChange={(event) =>
+            setIsActive(event.target.checked)
+          }
+        />
 
-      <button type="submit" disabled={submitting}>
-        {submitting ? "Salvando..." : "Salvar alterações"}
-      </button>
+        <span>Exposição ativa</span>
+      </label>
+
+      {error && (
+        <p
+          className="admin-form-error"
+          role="alert"
+        >
+          {error}
+        </p>
+      )}
+
+      <div className="admin-form-actions">
+        <button
+          className="admin-submit-button"
+          type="submit"
+          disabled={submitting}
+        >
+          {submitting
+            ? "Salvando..."
+            : "Salvar alterações"}
+        </button>
+
+        <Link
+          className="admin-cancel-link"
+          href="/admin"
+        >
+          Cancelar
+        </Link>
+      </div>
     </form>
-  );
+  )
 }

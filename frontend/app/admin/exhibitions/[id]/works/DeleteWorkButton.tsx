@@ -56,16 +56,21 @@ export default function DeleteWorkButton({
   }
 
   return (
-    <>
-      <button
-        type="button"
-        onClick={handleDelete}
-        disabled={deleting}
-      >
-        {deleting ? "Excluindo..." : "Excluir"}
-      </button>
+  <>
+    <button
+      className="admin-delete-button"
+      type="button"
+      onClick={handleDelete}
+      disabled={deleting}
+    >
+      {deleting ? "Excluindo..." : "Excluir"}
+    </button>
 
-      {error && <p>{error}</p>}
-    </>
-  );
+    {error && (
+      <p className="admin-inline-error" role="alert">
+        {error}
+      </p>
+    )}
+  </>
+)
 }

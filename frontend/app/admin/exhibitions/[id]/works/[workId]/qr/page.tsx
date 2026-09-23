@@ -1,47 +1,51 @@
-import Image from "next/image";
-import Link from "next/link";
+import Link from "next/link"
+
+import QrDisplay from "./QrDisplay"
 
 type QrPageProps = {
   params: Promise<{
-    id: string;
-    workId: string;
-  }>;
-};
+    id: string
+    workId: string
+  }>
+}
 
 export default async function QrPage({
   params,
 }: QrPageProps) {
-  const { id: exhibitionId, workId } = await params;
+  const { id: exhibitionId, workId } = await params
 
-  const qrUrl = `/api/admin/works/${workId}/qr`;
+  const qrUrl = `/api/admin/works/${workId}/qr`
 
   return (
-    <main>
-      <h1>QR Code da obra</h1>
+    <main className="admin-page">
+      <div className="admin-container">
+        <header className="admin-form-header">
+          <div>
+            <p className="admin-eyebrow">
+              Audioguia Cultural SJC
+            </p>
 
-      <div>
-        <Image
-          src={qrUrl}
-          alt="QR Code de acesso à obra"
-          width={300}
-          height={300}
-          unoptimized
+            <h1>QR Code da obra</h1>
+
+            <p>
+              Exiba o QR Code em uma tela ou faça
+              o download para impressão.
+            </p>
+          </div>
+
+          <Link
+            className="admin-back-link"
+            href={`/admin/exhibitions/${exhibitionId}/works`}
+          >
+            Voltar às obras
+          </Link>
+        </header>
+
+        <QrDisplay
+          qrUrl={qrUrl}
+          workId={workId}
         />
       </div>
-
-      <p>
-        <a href={qrUrl} download>
-          Baixar QR Code
-        </a>
-      </p>
-
-      <p>
-        <Link
-          href={`/admin/exhibitions/${exhibitionId}/works`}
-        >
-          Voltar às obras
-        </Link>
-      </p>
     </main>
-  );
+  )
 }

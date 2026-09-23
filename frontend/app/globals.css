@@ -997,3 +997,125 @@ button.admin-cancel-link {
     padding: 28px 24px;
   }
 }
+
+/* ─────────────────────────────────────────────
+   QR Code digital
+   ────────────────────────────────────────────── */
+
+.qr-admin-card {
+  padding: 32px;
+  border-radius: 18px;
+  background: #ffffff;
+}
+
+.qr-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 520px;
+  padding: 32px;
+  border: 1px solid #dddddd;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.qr-display-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  text-align: center;
+}
+
+.qr-display-eyebrow {
+  margin: 0 0 24px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.qr-image {
+  width: min(500px, 70vw);
+  height: auto;
+}
+
+.qr-instruction {
+  max-width: 500px;
+  margin: 24px 0 0;
+  color: #555555;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.qr-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.admin-secondary-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 10px 18px;
+  border: 1px solid #1f1f1f;
+  border-radius: 8px;
+  color: #1f1f1f;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+/* Modo de exibição digital */
+
+.qr-display:fullscreen {
+  width: 100vw;
+  height: 100vh;
+  padding: 5vh;
+  border: 0;
+  border-radius: 0;
+  background: #ffffff;
+}
+
+.qr-display:fullscreen .qr-display-content {
+  height: 100%;
+  justify-content: center;
+}
+
+.qr-display:fullscreen .qr-image {
+  width: auto;
+  height: min(70vh, 700px);
+  max-width: 80vw;
+}
+
+.qr-display:fullscreen .qr-display-eyebrow {
+  font-size: 1rem;
+}
+
+.qr-display:fullscreen .qr-instruction {
+  font-size: 1.2rem;
+}
+
+/* Tablet / telas menores */
+
+@media (max-width: 768px) {
+  .qr-admin-card {
+    padding: 24px;
+  }
+
+  .qr-display {
+    min-height: 420px;
+    padding: 24px;
+  }
+
+  .qr-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .qr-actions > * {
+    width: 100%;
+  }
+}

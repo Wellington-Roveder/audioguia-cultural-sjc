@@ -63,20 +63,20 @@ export default async function PublicWorkPage({
     )
   }
 
-  const apiUrl = process.env.API_URL
+  const publicApiUrl = process.env.NEXT_PUBLIC_API_URL;
 
-  if (!apiUrl) {
-    throw new Error("API_URL is not configured")
+  if (!publicApiUrl) {
+     new Error("NEXT_PUBLIC_API_URL is not configured");
   }
 
   const audioUrl =
-    `${apiUrl}/public/works/${public_slug}/media/audio`
+    `${publicApiUrl}/public/works/${public_slug}/media/audio`;
 
   const audioDescriptionUrl =
-    `${apiUrl}/public/works/${public_slug}/media/audio-description`
+    `${publicApiUrl}/public/works/${public_slug}/media/audio-description`;
 
   const librasVideoUrl =
-    `${apiUrl}/public/works/${public_slug}/media/libras`
+    `${publicApiUrl}/public/works/${public_slug}/media/libras`;
 
   return (
     <main className="work-page">

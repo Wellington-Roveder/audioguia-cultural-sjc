@@ -1,10 +1,13 @@
 from app.services.qr_code import build_public_work_url, generate_qr_png
 
 
-def test_build_public_work_url():
-    public_slug = "abc123"
+def test_build_public_work_url(monkeypatch):
+    monkeypatch.setattr(
+        "app.services.qr_code.settings.public_frontend_url",
+        "http://localhost:3000",
+    )
 
-    result = build_public_work_url(public_slug)
+    result = build_public_work_url("abc123")
 
     assert result == "http://localhost:3000/obra/abc123"
 

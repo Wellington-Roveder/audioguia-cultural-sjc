@@ -15,7 +15,7 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 # access to the values within the .ini file in use.
 database_url = os.getenv(
     "ALEMBIC_DATABASE_URL",
-    settings.database_url,
+    settings.async_database_url,
 )
 
 

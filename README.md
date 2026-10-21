@@ -294,3 +294,7 @@ Eventuais próximos passos (análise institucional, definição de piloto, sele�
 **Wellington Danilo Roveder**
 Bacharelado em Ciência da Computação — Centro Universitário Anhanguera Pitágoras Ampli
 Projeto de Extensão II — Programa de Ação e Difusão Cultural
+
+## Licença
+
+Este projeto está licenciado sob a licença **MIT**. Consulte o arquivo `/LICENSE` para mais detalhes.

@@ -2,6 +2,9 @@
 
 Guia digital interativo e acessível para exposições culturais.
 
+[![CI](https://github.com/Wellington-Roveder/audioguia-cultural-sjc/actions/workflows/ci.yml/badge.svg)](https://github.com/Wellington-Roveder/audioguia-cultural-sjc/actions/workflows/ci.yml)
+[![CD](https://github.com/Wellington-Roveder/audioguia-cultural-sjc/actions/workflows/cd.yml/badge.svg)](https://github.com/Wellington-Roveder/audioguia-cultural-sjc/actions/workflows/cd.yml)
+
 O Audioguia Cultural SJC é uma plataforma web para disponibilizar conteúdos de obras e exposições por meio de QR Codes. O sistema permite cadastrar exposições e obras e oferecer ao visitante conteúdo em **texto, áudio, audiodescrição e vídeo em Libras**, quando houver material apropriado e autorizado, além de um painel administrativo com métricas básicas de acesso.
 
 O projeto é uma atividade acadêmico-extensionista do curso de Bacharelado em Ciência da Computação (Projeto de Extensão II), desenvolvida por Wellington Danilo Roveder.
@@ -127,7 +130,26 @@ O PostgreSQL armazena os dados estruturados da aplicação, enquanto os arquivos
 - Heroku Postgres — banco de dados;
 - Cloudflare R2 — armazenamento de mídias;
 - Docker — ambiente de desenvolvimento;
-- GitHub Actions — integração contínua.
+- GitHub Actions — integração e entrega contínuas.
+
+## CI/CD
+
+O GitHub Actions valida cada alteração antes da integração:
+
+- **Backend:** instala as dependências com `uv`, cria um PostgreSQL de teste, aplica as migrations e executa o Pytest;
+- **Frontend:** instala as dependências com `npm ci`, executa o ESLint e valida o build de produção do Next.js.
+
+Após um push na `main` (ou execução manual), o workflow de CD publica o backend no Heroku e o frontend na Vercel. O deploy usa o ambiente protegido `production` e requer estes secrets no repositório:
+
+```text
+HEROKU_API_KEY
+HEROKU_APP_NAME
+VERCEL_ORG_ID
+VERCEL_PROJECT_ID
+VERCEL_TOKEN
+```
+
+As migrations do backend são executadas automaticamente pelo comando `release` do Heroku antes da aplicação ser disponibilizada.
 
 ## Segurança
 
